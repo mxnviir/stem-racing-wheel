@@ -8,3 +8,4 @@ h_load 0.20 phase +0 (616443 dof): support q 0.966 LC4 at r 4.51 th 90 z 1.13 | 
 h_load 0.20 phase +90 (616356 dof): support q 0.974 LC4 at r 4.51 th 97 z 1.13 | hub q 0.657 LC4 at r 3.97 th 91 z 0.0 | rim q 0.749 LC7 at r 14.1 th 90 z 2.4 [76s]
 == DF3 drum, faces 0.70->1.12 + powder holes
 h_load 0.25 phase +0 (410673 dof): support q 0.903 LC4 at r 4.59 th 91 z 1.15 | hub q 0.617 LC4 at r 3.99 th 90 z 0.0 | rim q 0.754 LC7 at r 13.4 th -90 z 2.44 [43s]
+h_load 0.25 phase +90 (408522 dof): support q 0.897 LC4 at r 4.59 th 91 z 1.15 | hub q 0.617 LC4 at r 3.99 th 90 z 0.0 | rim q 0.753 LC7 at r 14.1 th 90 z 2.49 [43s]
