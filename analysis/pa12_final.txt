@@ -2,3 +2,4 @@ Final verification: DF drum, tapered faces + powder holes
 params {'rim': 0.7, 'hub': 1.0, 'sup': 0.7, 'ftaper': 1.4, 'holes_n': 2, 'holes_d': 3.0, 'holes_r': 8.5}
 allowable (max of s1, vM) = 21.0 MPa
 1. mesh convergence (q = max(s1, vM) / allowable, worst over load cases and spoke phases)
+  h 1.40/0.60 (177876 dof): hub 0.664 (LC4@+0.0) rim 0.759 (LC7@+0.0) support 0.915 (LC4@+0.0) | m_eq 1.3485 g | LC1_um_per_N 5.73 LC1_edge_um_per_N 0.17 LC3_dD_um 218.48 LC4_um 136.84 LC5_dD_um 13.32 LC6_edge_um 14.18 LC7_dD_edge_um 31.95 LC8_lip_um 187.19 [31s]
