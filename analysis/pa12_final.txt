@@ -8,3 +8,4 @@ allowable (max of s1, vM) = 21.0 MPa
 2./3. buckling (load factor on the 20 N handling loads) and natural frequencies, middle mesh level
   phase +0
     LC2 sym : lambda_1 = 15.88  (38s)
+    LC2 anti: lambda_1 = 16.68  (64s)
