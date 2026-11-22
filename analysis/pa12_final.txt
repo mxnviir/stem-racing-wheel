@@ -9,3 +9,4 @@ allowable (max of s1, vM) = 21.0 MPa
   phase +0
     LC2 sym : lambda_1 = 15.88  (38s)
     LC2 anti: lambda_1 = 16.68  (64s)
+    LC3 sym : lambda_1 = 13.48  (37s)
