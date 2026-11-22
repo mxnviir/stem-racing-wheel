@@ -19,6 +19,8 @@ PA12_SLS = Material("SLS PA12 (PA2200)", 1700, 0.40, 930, 42)
 SF = 2.0
 ALLOW = PA12_SLS.strength / SF
 TMIN = 0.7
+PMIN = {"hub": 1.0}     # bearing-seat wall: press-fit/bonded MR63 retention in SLS nylon needs >= 1 mm
+RF = 1.0                # junction fillet radius (mm): at 0.5 mm the spoke-root Kt grows with spoke thickness
 BEAR_M, BEAR_I = 2 * 0.32, 2 * 0.18 * 2.7**2     # two MR63 (as in concepts.py)
 
 
@@ -75,7 +77,7 @@ def web_wheel(p):
     return Wheel(name="web", rim_t=[(0, p["rim"]), (W, p["rim"])], t_hub=p["hub"], hub_z=(W / 2 - 3, W / 2 + 3),
                  seats=[(W / 2 - 2.5, W / 2 + 2.5)], lip_h=p.get("lip_h", 0.0), lip_t=p.get("lip_t", 0.8),
                  spokes=[SpokeSet(N=0, zc=W / 2, ts_hub=p["sup"] * p.get("taper", 1.0), ts_rim=p["sup"])],
-                 rf=p.get("rf", 0.5))
+                 rf=p.get("rf", RF))
 
 
 def spoke_wheel(p):
@@ -84,12 +86,12 @@ def spoke_wheel(p):
                  seats=[(W / 2 - 2.5, W / 2 + 2.5)], lip_h=p.get("lip_h", 0.0), lip_t=p.get("lip_t", 0.8),
                  spokes=[SpokeSet(N=N, zc=W / 2, ts_hub=p["ts"] * p.get("taper", 1.0), ts_rim=p["ts"],
                                   w_hub=p["w"] * p.get("wtaper", 1.0), w_rim=p["w"])],
-                 pad_t=p.get("pad_t", 0.0), pad_deg=p.get("pad_deg", 15.0), rf=p.get("rf", 0.5))
+                 pad_t=p.get("pad_t", 0.0), pad_deg=p.get("pad_deg", 15.0), rf=p.get("rf", RF))
 
 
 def drum_wheel(p):
     return Wheel(name="drum", rim_t=[(0, p["rim"]), (W, p["rim"])], t_hub=p["hub"], hub_z=(0, W),
-                 seats=[(0, 2.5), (W - 2.5, W)], spokes=[], drum_t=p["sup"], rf=p.get("rf", 0.5))
+                 seats=[(0, 2.5), (W - 2.5, W)], spokes=[], drum_t=p["sup"], rf=p.get("rf", RF))
 
 
 def twin_spoke_wheel(p):
@@ -100,7 +102,7 @@ def twin_spoke_wheel(p):
     stag = 180.0 / N if p.get("stagger", False) else 0.0
     return Wheel(name=f"twin{N}", rim_t=[(0, p["rim"]), (W, p["rim"])], t_hub=p["hub"], hub_z=(0, W),
                  seats=[(0, 2.5), (W - 2.5, W)], spokes=[s(zo, 90.0), s(W - zo, 90.0 + stag)],
-                 lip_h=p.get("lip_h", 0.0), lip_t=p.get("lip_t", 0.8), rf=p.get("rf", 0.5))
+                 lip_h=p.get("lip_h", 0.0), lip_t=p.get("lip_t", 0.8), rf=p.get("rf", RF))
 
 
 BUILDERS = {"web": web_wheel, "spokes": spoke_wheel, "drum": drum_wheel, "twin": twin_spoke_wheel}
@@ -131,7 +133,8 @@ def size(kind, p0, iters=8, h=1.4, h_load=0.6, log=print):
         params = {k: list(v) for k, v in ROLE_PARAMS[kind].items()}
         if p.get("lip_h", 0) > 0:
             params["rim"] += ["lip_t", "lip_h"]
-        tight = all(r["q"][ro] >= 0.85 or all(p[k] <= TMIN + 1e-9 for k in params[ro]) for ro in r["q"] if ro in params)
+        tight = all(r["q"][ro] >= 0.85 or all(p[k] <= PMIN.get(k, TMIN) + 1e-9 for k in params[ro])
+                    for ro in r["q"] if ro in params)
         if r["ok"] and tight:
             break
         for ro, q in r["q"].items():
@@ -142,18 +145,18 @@ def size(kind, p0, iters=8, h=1.4, h_load=0.6, log=print):
                 ks = [ks[0]] if r["gov"][ro].split("@")[0] in AXIAL_LCS else [ks[1]]
             f = np.clip(np.sqrt(q) * (1.03 if q > 1 else 1.0), 0.65, 1.5)
             for k in ks:
-                p[k] = round(max(TMIN, p[k] * f), 3)
+                p[k] = round(max(PMIN.get(k, TMIN), p[k] * f), 3)
     return dict(kind=kind, p=hist[-1]["p"], final=r, hist=hist)
 
 
 CANDIDATES = [
-    ("W  central web",              "web",    dict(rim=0.9, hub=0.9, sup=1.4, taper=1.3)),
-    ("WL central web + lips",       "web",    dict(rim=0.8, hub=0.9, sup=1.4, taper=1.3, lip_h=1.0, lip_t=0.8)),
-    ("S6L 6 spokes + lips",         "spokes", dict(N=6, rim=0.8, hub=0.9, ts=1.6, w=2.0, taper=1.3, wtaper=1.3, lip_h=1.0, lip_t=0.8)),
-    ("S6LP 6 spokes + lips + pads", "spokes", dict(N=6, rim=0.8, hub=0.9, ts=1.6, w=2.0, taper=1.3, wtaper=1.3, lip_h=1.0, lip_t=0.8,
+    ("W  central web",              "web",    dict(rim=0.9, hub=1.0, sup=1.4, taper=1.3)),
+    ("WL central web + lips",       "web",    dict(rim=0.8, hub=1.0, sup=1.4, taper=1.3, lip_h=1.0, lip_t=0.8)),
+    ("S6L 6 spokes + lips",         "spokes", dict(N=6, rim=0.8, hub=1.0, ts=1.6, w=2.0, taper=1.3, wtaper=1.3, lip_h=1.0, lip_t=0.8)),
+    ("S6LP 6 spokes + lips + pads", "spokes", dict(N=6, rim=0.8, hub=1.0, ts=1.6, w=2.0, taper=1.3, wtaper=1.3, lip_h=1.0, lip_t=0.8,
                                                    pad_t=0.6, pad_deg=12.0)),
-    ("T6 twin 6-spoke planes",      "twin",   dict(N=6, rim=0.8, hub=0.9, ts=1.2, w=1.6, taper=1.2, wtaper=1.3, zoff=2.0)),
-    ("D  closed drum",              "drum",   dict(rim=0.8, hub=0.9, sup=0.9)),
+    ("T6 twin 6-spoke planes",      "twin",   dict(N=6, rim=0.8, hub=1.0, ts=1.2, w=1.6, taper=1.2, wtaper=1.3, zoff=2.0)),
+    ("D  closed drum",              "drum",   dict(rim=0.8, hub=1.0, sup=0.9)),
 ]
 
 
