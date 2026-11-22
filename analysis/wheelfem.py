@@ -95,10 +95,11 @@ def _Bmat(G):
 class Model:
     CHUNK = 600
 
-    def __init__(self, d: Design, h_r=0.8, h_z=0.8, n_theta=48, theta_refine=True):
+    def __init__(self, d: Design, h_r=0.8, h_z=0.8, n_theta=48, theta_refine=True, z_extra=()):
         self.d = d
         rb = [x for b in d.blocks for x in (b.r0, b.r1)]
-        zb = [x for b in d.blocks for x in (b.z0, b.z1)] + list(d.contact) + [z for s in d.seats for z in s]
+        zb = ([x for b in d.blocks for x in (b.z0, b.z1)] + list(d.contact) + [z for s in d.seats for z in s]
+              + list(z_extra))      # extra grid lines, e.g. load-patch edges
         r, z = _grid(rb, h_r), _grid(zb, h_z)
         if theta_refine:   # finer near the load points at 90 and 270 deg (end/mean spacing 0.2)
             s = np.linspace(-1, 1, n_theta + 1); k = 0.4

@@ -7,7 +7,7 @@ SF 2.0; CF: von Mises vs conservative strength, SF 2.0).  Load cases as in conce
 """
 import sys, json, time
 import numpy as np
-from concepts import run, drum, web, AL, TI, SLA, SLA10K, CF, PA12
+from concepts import run, drum, web, AL, TI, SLA, SLA10K, CF, PA12, LCS
 
 TMIN = {AL.name: 0.25, TI.name: 0.30, SLA.name: 0.40, SLA10K.name: 0.40, CF.name: 0.25, PA12.name: 0.70}
 
@@ -42,7 +42,7 @@ FAM = {
 
 def ratios(res, roles):
     r = {}
-    for lc in ("LC2", "LC3", "LC4", "LC5"):
+    for lc in LCS:
         for ib, s in res[lc].items():
             meas = s["s1"] if brittle(s["mat"]) else s["vm"]
             q = meas / (s["strength"] / need(s["mat"]))
@@ -51,24 +51,28 @@ def ratios(res, roles):
                 r[role] = (q, lc)
     return r
 
-def size(fam, iters=7):
+def size(fam, iters=12, tmin=None, t0=None, verbose=True):
+    """tmin: optional {material name: minimum wall} overriding TMIN; t0: optional start thicknesses."""
+    TM = dict(TMIN, **(tmin or {}))
     build, roles, rmat = FAM[fam]
-    t = {ro: max(0.5, TMIN[rmat[ro].name]) for ro in set(roles)}
+    t = {ro: max(TM[rmat[ro].name], (t0 or {}).get(ro, 0.5)) for ro in set(roles)}
     hist = []
     for it in range(iters):
         res = run(build(t), by="block")
         q = ratios(res, roles)
-        hist.append(dict(t=dict(t), m_eq=res["m_eq_g"], mass=res["mass_g"], q={k: v[0] for k, v in q.items()}))
+        hist.append(dict(t=dict(t), m_eq=res["m_eq_g"], mass=res["mass_g"], q={k: v[0] for k, v in q.items()},
+                         lc={k: v[1] for k, v in q.items()}))
         ok = all(v[0] <= 1.0 for v in q.values())
-        tight = all(v[0] >= 0.85 or t[k] <= TMIN[rmat[k].name] + 1e-9 for k, v in q.items())
-        print(f"  it{it} " + " ".join(f"{k}={t[k]:.3f}(q{q[k][0]:.2f},{q[k][1]})" for k in sorted(t))
+        tight = all(v[0] >= 0.85 or t[k] <= TM[rmat[k].name] + 1e-9 for k, v in q.items())
+        if verbose: print(f"  it{it} " + " ".join(f"{k}={t[k]:.3f}(q{q[k][0]:.2f},{q[k][1]})" for k in sorted(t))
               + f"  m_eq={res['m_eq_g']:.3f} g", flush=True)
         if ok and tight:
             break
         for k, (qq, _) in q.items():
             f = np.clip(np.sqrt(qq) * (1.03 if qq > 1 else 1.0), 0.6, 1.6)
-            t[k] = round(max(TMIN[rmat[k].name], t[k] * f), 3)
-    return dict(final=hist[-1], ok=ok, res={k: res[k] for k in ("mass_g", "m_eq_g", "LC1_um_per_N", "LC3_dD_um", "LC4_face_um", "LC5_dD_um")}, hist=hist)
+            t[k] = round(max(TM[rmat[k].name], t[k] * f), 3)
+    return dict(final=hist[-1], ok=ok, res={k: res[k] for k in ("mass_g", "m_eq_g", "LC1_um_per_N", "LC1_edge_um_per_N", "LC3_dD_um", "LC4_face_um",
+                                                                  "LC5_dD_um", "LC6_edge_um", "LC7_dD_edge_um", "LC8_lip_um")}, hist=hist)
 
 if __name__ == "__main__":
     keys = sys.argv[1:] or list(FAM)

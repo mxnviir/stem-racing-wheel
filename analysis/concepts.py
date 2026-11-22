@@ -8,6 +8,11 @@ Load cases (bore = bearing seats fixed unless stated)
   LC3 pinch : 20 N diametral pinch, wheel off the car (fingertip patch +-6 deg), bore free
   LC4 push  : 20 N axial thumb push, dia 8 mm patch on outer face at r = 8.5 mm
   LC5 spin  : 20 000 rpm centrifugal
+  LC6 edge press : 20 N radial on a 3 mm band at one rim edge (+-6 deg), bore fixed
+  LC7 edge pinch : 20 N diametral pinch on the same edge bands, wheel off the car
+  LC8 lip push   : 20 N axial on the rim lip (outer 1 mm of the end face, +-16 deg ~ 8 mm finger), bore fixed
+  LC1-LC4 load the full width and are centred on a web, so they never load an overhanging rim edge.
+  LC6-LC8 close that gap.
 Pass criteria: metals SF >= 1.5 on von Mises vs yield; polymers SF >= 2 on max principal vs UTS;
 CF SF >= 2 on von Mises vs (conservative) strength.
 """
@@ -28,6 +33,8 @@ RB = 3.0                     # bearing seat radius (6 mm OD)
 BEAR_M = 2 * 0.32            # g, two MR63ZZ per wheel (whole bearing counts toward car mass)
 BEAR_I = 2 * 0.18 * 2.7**2   # g mm^2, rotating outer race + shields only (axle is fixed)
 SEATS = [(0, 2.5), (W - 2.5, W)]
+EDGE = 3.0                   # mm, width of the rim-edge load band (LC6, LC7)
+LCS = ("LC2", "LC3", "LC4", "LC5", "LC6", "LC7", "LC8")   # load cases checked against strength
 
 
 def drum(name, t_rim, t_face, t_hub, m_rim, m_face, m_hub, mats):
@@ -69,7 +76,7 @@ CONCEPTS = {
 def run(design, n_theta=48, by="mat"):
     solid_like = len(design.blocks) == 1
     m = Model(design, h_r=1.6 if solid_like else 0.8, h_z=1.6 if solid_like else 0.8,
-              n_theta=32 if solid_like else n_theta)
+              n_theta=32 if solid_like else n_theta, z_extra=(EDGE, W - EDGE))
     K = m.stiffness()
     th = lambda x: np.arctan2(x[1], x[0])
     on_R = lambda x: np.hypot(x[0], x[1]) > R - 0.05
@@ -86,7 +93,18 @@ def run(design, n_theta=48, by="mat"):
     thumb = lambda x: (np.abs(x[2] - zmin) < 1e-6) & (x[0]**2 + (x[1] - 8.5)**2 < 16.0)
     f4, *_ = m.traction_patch(thumb, lambda x: np.array([0 * x[0], 0 * x[0], 1 + 0 * x[0]]), 20.0 / 2)
     f5 = m.centrifugal(20000 * 2 * np.pi / 60)
-    u1, u4, u5 = m.solve(K, [f1, f4, f5], [Dbore, Dsym])
+    edge = lambda sel: (lambda x: sel(x) & (x[2] < EDGE + 1e-6))
+    f6, *_ = m.traction_patch(edge(top(6)), down, 20.0 / 2)
+    lip = lambda x: ((np.abs(x[2]) < 1e-6) & (np.hypot(x[0], x[1]) > R - 1.0 - 1e-6)
+                     & (th(x) > np.pi / 2) & (th(x) < np.pi / 2 + np.deg2rad(16)))
+    f8, *_ = m.traction_patch(lip, lambda x: np.array([0 * x[0], 0 * x[0], 1 + 0 * x[0]]), 20.0 / 2)
+    u1, u4, u5, u6, u8 = m.solve(K, [f1, f4, f5, f6, f8], [Dbore, Dsym])
+    pedge = np.array([[0.0], [R], [0.0]])
+    out["LC1_edge_um_per_N"] = float(-m.disp_at(u1, pedge)[1, 0] * 1e3)
+    out["LC6"] = m.stresses(u6, by=by)
+    out["LC6_edge_um"] = float(-m.disp_at(u6, pedge)[1, 0] * 1e3)
+    out["LC8"] = m.stresses(u8, by=by)
+    out["LC8_lip_um"] = float(m.disp_at(u8, pedge)[2, 0] * 1e3)
     out["LC1_um_per_N"] = float(-m.disp_at(u1, probe)[1, 0] * 1e3)
     out["LC1"] = m.stresses(u1, by=by)
     out["LC2"] = m.stresses(20 * u1, by=by)
@@ -97,17 +115,22 @@ def run(design, n_theta=48, by="mat"):
 
     f3a, *_ = m.traction_patch(top(6), down, 20.0 / 2)
     f3b, *_ = m.traction_patch(bot(6), up, 20.0 / 2)
+    f7a, *_ = m.traction_patch(edge(top(6)), down, 20.0 / 2)
+    f7b, *_ = m.traction_patch(edge(bot(6)), up, 20.0 / 2)
     Dy = m.dofs_where(lambda x: np.abs(x[1]) < 1e-9, 1)
-    Dz = m.dofs_where(lambda x: np.isclose(x[2], W / 2), 2)
-    u3 = m.solve(K, f3a + f3b, [Dsym, Dy, Dz])
+    # z rigid-body mode: fix u_z at one node (loads are self-equilibrated; LC7 is not z-symmetric)
+    n0 = int(np.argmin(np.sum((m.X - np.array([[-R], [0.0], [W / 2]]))**2, axis=0)))
+    u3, u7 = m.solve(K, [f3a + f3b, f7a + f7b], [Dsym, Dy, np.array([3 * n0 + 2])])
     out["LC3"] = m.stresses(u3, by=by)
     out["LC3_dD_um"] = float(-2 * m.disp_at(u3, probe)[1, 0] * 1e3)
+    out["LC7"] = m.stresses(u7, by=by)
+    out["LC7_dD_edge_um"] = float(-2 * m.disp_at(u7, pedge)[1, 0] * 1e3)
     return out
 
 
 def governing_SF(res):
     worst = {}
-    for lc in ("LC2", "LC3", "LC4", "LC5"):
+    for lc in LCS:
         for mat, r in res[lc].items():
             brittle = "SLA" in mat or "PA12" in mat
             sf = r["strength"] / max(r["s1"] if brittle else r["vm"], 1e-12)
