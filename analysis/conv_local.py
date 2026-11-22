@@ -7,11 +7,14 @@ from geom3d import build
 from fem3d import Model3D
 import lc3d
 
-p = json.load(open("pa12_explore.json"))["DF2 drum, faces 0.70->1.05 + powder holes"]["p"]
+import sys
+NAME = sys.argv[1] if len(sys.argv) > 1 else "DF2 drum, faces 0.70->1.05 + powder holes"
+HL = [float(x) for x in sys.argv[2:]] or [0.42, 0.32, 0.25, 0.2]
+p = json.load(open("pa12_explore.json"))[NAME]["p"]
 g = drum_wheel(p)
 out = []
-fh = open("conv_local.txt", "w")
-for hl in (0.42, 0.32, 0.25, 0.2):
+fh = open("conv_local.txt", "a"); fh.write(f"== {NAME}\n")
+for hl in HL:
     for dph in phases(g):
         gg = g.rotated(dph); t0 = time.time()
         P, T, _ = build(gg, h=1.0, h_load=hl)
@@ -29,4 +32,4 @@ for hl in (0.42, 0.32, 0.25, 0.2):
             f"{ro} q {row[ro][0]:.3f} {row[ro][1]} at r {row[ro][2]} th {row[ro][3]:.0f} z {row[ro][4]}" for ro in ("support", "hub", "rim"))
             + f" [{time.time()-t0:.0f}s]")
         print(line, flush=True); fh.write(line + "\n"); fh.flush()
-json.dump(out, open("conv_local.json", "w"), indent=1, default=float)
+json.dump(out, open(f"conv_local_{NAME.split()[0]}.json", "w"), indent=1, default=float)
