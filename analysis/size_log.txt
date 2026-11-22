@@ -1,1 +1,6 @@
 A Al drum
+  it0 face=0.500(q0.22,LC4) hub=0.500(q0.16,LC4) rim=0.500(q0.10,LC6)  m_eq=2.825 g
+  it1 face=0.300(q0.42,LC4) hub=0.300(q0.03,LC4) rim=0.300(q0.26,LC6)  m_eq=1.753 g
+  it2 face=0.250(q0.61,LC4) hub=0.250(q0.05,LC4) rim=0.250(q0.36,LC6)  m_eq=1.474 g
+=> A Al drum: PASS t={'rim': 0.25, 'face': 0.25, 'hub': 0.25} mass 2.74 g m_eq 1.474 g run 1.40 um/N [51s]
+A Al web
