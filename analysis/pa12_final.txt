@@ -3,3 +3,4 @@ params {'rim': 0.7, 'hub': 1.0, 'sup': 0.7, 'ftaper': 1.4, 'holes_n': 2, 'holes_
 allowable (max of s1, vM) = 21.0 MPa
 1. mesh convergence (q = max(s1, vM) / allowable, worst over load cases and spoke phases)
   h 1.40/0.60 (177963 dof): hub 0.675 (LC4@+90.0) rim 0.759 (LC7@+90.0) support 0.938 (LC4@+90.0) | m_eq 1.3485 g | LC1_um_per_N 5.73 LC1_edge_um_per_N 0.17 LC3_dD_um 218.47 LC4_um 137.52 LC5_dD_um 13.33 LC6_edge_um 14.18 LC7_dD_edge_um 31.96 LC8_lip_um 187.09 [31s]
+  h 1.00/0.42 (225444 dof): hub 0.753 (LC4@+90.0) rim 0.762 (LC7@+90.0) support 0.957 (LC4@+0.0) | m_eq 1.3521 g | LC1_um_per_N 5.74 LC1_edge_um_per_N 0.17 LC3_dD_um 218.86 LC4_um 139.49 LC5_dD_um 13.20 LC6_edge_um 14.12 LC7_dD_edge_um 31.96 LC8_lip_um 189.19 [40s]
