@@ -33,7 +33,14 @@ def evaluate(g, h=1.4, h_load=0.6, verbose=False):
     for dph in phases(g):
         gg = g.rotated(dph)
         t0 = time.time()
-        P, T, info = build(gg, h=h, h_load=h_load)
+        for k in range(4):                 # mesher failures are rare and size-dependent: perturb and retry
+            try:
+                P, T, info = build(gg, h=h * (1 - 0.07 * k), h_load=h_load * (1 - 0.05 * k))
+                break
+            except Exception as e:
+                if k == 3:
+                    raise
+                print(f"    mesh retry {k + 1}: {e}", flush=True)
         m = Model3D(P, T, PA12_SLS, extra_mass_g=BEAR_M, extra_Izz=BEAR_I)
         r = lc3d.run(gg, m)
         r["mesh"] = dict(nodes=P.shape[1], tets=T.shape[1], **info)

@@ -284,6 +284,9 @@ def build(g: Wheel, h=0.6, h_load=None, half=True, step_file=None, verbose=False
         try:
             gmsh.option.setNumber("Mesh.Algorithm3D", alg)
             gmsh.model.mesh.generate(3)
+            et_ = gmsh.model.mesh.getElements(3)[0]
+            if 4 not in list(et_):
+                raise RuntimeError("no tetrahedra")
             break
         except Exception:
             gmsh.model.mesh.clear()
