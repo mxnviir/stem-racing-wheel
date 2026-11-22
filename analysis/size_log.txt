@@ -15,3 +15,7 @@ A Al web
   it2 hub=0.250(q0.53,LC8) rim=0.317(q0.96,LC7) web=0.458(q0.98,LC8)  m_eq=1.695 g
 => A Al web: PASS t={'hub': 0.25, 'rim': np.float64(0.317), 'web': np.float64(0.458)} mass 2.79 g m_eq 1.695 g run 0.04 um/N [25s]
 T Ti drum
+  it0 face=0.500(q0.14,LC4) hub=0.500(q0.13,LC4) rim=0.500(q0.06,LC6)  m_eq=4.447 g
+  it1 face=0.300(q0.40,LC4) hub=0.300(q0.41,LC4) rim=0.300(q0.15,LC6)  m_eq=2.756 g
+=> T Ti drum: PASS t={'hub': 0.3, 'rim': 0.3, 'face': 0.3} mass 4.60 g m_eq 2.756 g run 0.59 um/N [30s]
+S SLA drum
