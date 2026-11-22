@@ -13,3 +13,10 @@ T Ti drum
   it1 face=0.300(q0.24,LC4) hub=0.300(q0.02,LC4) rim=0.300(q0.15,LC6)  m_eq=2.756 g
 => T Ti drum: PASS t={'rim': 0.3, 'face': 0.3, 'hub': 0.3} mass 4.60 g m_eq 2.756 g run 0.59 um/N [33s]
 S SLA drum
+  it0 face=0.500(q2.71,LC4) hub=0.500(q2.01,LC4) rim=0.500(q0.95,LC6)  m_eq=1.194 g
+  it1 face=0.800(q0.74,LC4) hub=0.730(q1.03,LC4) rim=0.489(q0.78,LC6)  m_eq=1.375 g
+  it2 face=0.687(q1.38,LC4) hub=0.765(q1.04,LC4) rim=0.433(q1.02,LC6)  m_eq=1.220 g
+  it3 face=0.830(q0.78,LC4) hub=0.804(q0.97,LC4) rim=0.449(q0.88,LC6)  m_eq=1.338 g
+  it4 face=0.732(q1.21,LC4) hub=0.791(q0.99,LC4) rim=0.420(q1.03,LC6)  m_eq=1.231 g
+  it5 face=0.830(q0.79,LC4) hub=0.788(q1.02,LC4) rim=0.439(q0.91,LC6)  m_eq=1.322 g
+  it6 face=0.737(q1.13,LC4) hub=0.821(q1.10,LC4) rim=0.418(q1.03,LC6)  m_eq=1.232 g
