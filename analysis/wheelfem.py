@@ -117,19 +117,34 @@ class Model:
         m2 = MeshHex2.from_mesh(m)
         rr, tt, zz = m2.doflocs
         self.mesh = dataclasses.replace(m2, doflocs=np.vstack([rr * np.cos(tt), rr * np.sin(tt), zz]))
+        self._check_theta_axis()
         self.sb = Basis(self.mesh, ElementHex2(), intorder=4)
         self.X = self.sb.doflocs
         self.nn = self.X.shape[1]
         self.ndofs = 3 * self.nn
+
+    def _check_theta_axis(self):
+        """at="surface" assumes reference axis 2 runs along theta (true for MeshHex.init_tensor(r, th, z))."""
+        P = np.array([[0.5, 0.5], [0.5, 0.5], [0.0, 1.0]])
+        b = Basis(self.mesh, ElementHex2(), quadrature=(P, np.ones(2)), elements=np.array([0]))
+        X = np.asarray(b.global_coordinates().value)[:, 0, :]
+        if not (np.isclose(np.hypot(*X[:2, 0]), np.hypot(*X[:2, 1])) and np.isclose(X[2, 0], X[2, 1])):
+            raise RuntimeError("reference axis 2 is not theta; fix the at='surface' stations")
 
     # ---------------- element data ----------------
     def _chunks(self, i, el=None, at="gauss"):
         if el is None:
             el = np.nonzero(self.mat == i)[0]
         quad = None
-        if at == "nodes":   # evaluate at the 27 element nodes -> includes wall surfaces
+        if at in ("nodes", "surface"):
+            # "nodes": the 27 element nodes (wall surfaces, but also the element ends in theta).
+            # "surface": nodes (0, 1/2, 1) in r and z, so wall surfaces are included, but the 2-point
+            # Gauss stations in theta (reference axis 2). Curved quadratic elements carry a parasitic
+            # membrane stress that is parabolic in theta, about +2.5..8 % at the element ends and
+            # zero at these stations (see validate_stress.py, V4).
             g = np.array([0.0, 0.5, 1.0])
-            P = np.array(np.meshgrid(g, g, g, indexing='ij')).reshape(3, -1)
+            gt = g if at == "nodes" else 0.5 + np.array([-0.5, 0.5]) / np.sqrt(3)
+            P = np.array(np.meshgrid(g, g, gt, indexing='ij')).reshape(3, -1)
             quad = (P, np.ones(P.shape[1]))
         for k in range(0, len(el), self.CHUNK):
             sub = el[k:k + self.CHUNK]
@@ -243,9 +258,10 @@ class Model:
         return [U[:, k] for k in range(U.shape[1])] if multi else U[:, 0]
 
     # ---------------- post ----------------------
-    def stresses(self, u, by="mat", at="nodes", el_filter=None):
-        """Max von Mises and max principal stress (at Gauss points), grouped by material
-        (by="mat", keyed by material name) or by block (by="block", keyed by block index)."""
+    def stresses(self, u, by="mat", at="surface", el_filter=None):
+        """Max von Mises and max principal stress, grouped by material (by="mat", keyed by material
+        name) or by block (by="block", keyed by block index). at = "surface" (default: wall surfaces,
+        theta-Gauss stations), "nodes" (27 element nodes) or "gauss" (3x3x3 interior Gauss points)."""
         out = {}
         groups = ([(M.name, M, np.nonzero(self.mat == i)[0]) for i, M in enumerate(self.d.materials)] if by == "mat"
                   else [(ib, self.d.materials[b.mat], np.nonzero(self.blk == ib)[0]) for ib, b in enumerate(self.d.blocks)])
