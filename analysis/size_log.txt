@@ -20,3 +20,4 @@ S SLA drum
   it4 face=0.732(q1.21,LC4) hub=0.791(q0.99,LC4) rim=0.420(q1.03,LC6)  m_eq=1.231 g
   it5 face=0.830(q0.79,LC4) hub=0.788(q1.02,LC4) rim=0.439(q0.91,LC6)  m_eq=1.322 g
   it6 face=0.737(q1.13,LC4) hub=0.821(q1.10,LC4) rim=0.418(q1.03,LC6)  m_eq=1.232 g
+  it7 face=0.808(q1.00,LC4) hub=0.887(q0.88,LC4) rim=0.438(q0.92,LC6)  m_eq=1.310 g
