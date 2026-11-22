@@ -68,9 +68,10 @@ def setup(g, m: Model3D):
     bf = m.boundary_facets(lambda x: (rc(x) < 4.6) & ~g.roles(x)["rim"])   # the rim lip is LC8's job
     n = m.facet_normals(bf)
     bf = bf[n[2] < -0.95]
-    zf = m.mesh.p[2, m.mesh.facets[:, bf]].mean(axis=0)
-    thumb = bf[zf < zf.min() + 0.3] if len(bf) else bf
-    zt = zf.min() if len(bf) else 0.0
+    mid = m.mesh.p[:, m.mesh.facets[:, bf]].mean(axis=1)
+    zf, core = mid[2], rc(mid) < 3.5          # contact layer = outermost surface under the thumb's core
+    zt = zf[core].min() if core.any() else (zf.min() if len(bf) else 0.0)
+    thumb = bf[np.abs(zf - zt) < 0.3] if len(bf) else bf
     wt = lambda x: ramp(rc(x) - 4.0) * (x[2] < zt + 0.3)
     f["LC4"], a4 = m.traction_weighted(thumb, wt, axial, F / 2) if len(thumb) else (None, 0.0)
     # lip: z = 0 end face, outer 1 mm, +-16 deg (smoothed edges)
