@@ -19,3 +19,19 @@ T Ti drum
   it1 face=0.300(q0.40,LC4) hub=0.300(q0.41,LC4) rim=0.300(q0.15,LC6)  m_eq=2.756 g
 => T Ti drum: PASS t={'hub': 0.3, 'rim': 0.3, 'face': 0.3} mass 4.60 g m_eq 2.756 g run 0.59 um/N [30s]
 S SLA drum
+  it0 face=0.500(q2.49,LC4) hub=0.500(q2.94,LC4) rim=0.500(q0.97,LC6)  m_eq=1.194 g
+  it1 face=0.800(q0.89,LC4) hub=0.800(q1.09,LC4) rim=0.491(q0.78,LC6)  m_eq=1.380 g
+  it2 face=0.755(q0.99,LC4) hub=0.859(q1.13,LC4) rim=0.434(q0.97,LC6)  m_eq=1.269 g
+  it3 face=0.752(q0.99,LC4) hub=0.939(q1.12,LC4) rim=0.427(q1.00,LC6)  m_eq=1.259 g
+  it4 face=0.747(q0.98,LC4) hub=1.024(q1.11,LC4) rim=0.426(q1.00,LC6)  m_eq=1.258 g
+  it5 face=0.739(q0.97,LC4) hub=1.113(q1.10,LC4) rim=0.439(q0.96,LC6)  m_eq=1.275 g
+  it6 face=0.729(q0.97,LC4) hub=1.203(q1.10,LC4) rim=0.431(q1.00,LC6)  m_eq=1.261 g
+  it7 face=0.719(q0.98,LC4) hub=1.301(q1.10,LC4) rim=0.430(q1.01,LC6)  m_eq=1.257 g
+  it8 face=0.710(q0.97,LC4) hub=1.408(q1.10,LC4) rim=0.445(q0.96,LC6)  m_eq=1.279 g
+  it9 face=0.700(q0.98,LC4) hub=1.518(q1.10,LC4) rim=0.437(q1.00,LC6)  m_eq=1.266 g
+  it10 face=0.695(q0.97,LC4) hub=1.639(q1.11,LC4) rim=0.436(q1.00,LC6)  m_eq=1.269 g
+  it11 face=0.684(q0.97,LC4) hub=1.776(q1.10,LC4) rim=0.450(q0.97,LC6)  m_eq=1.291 g
+=> S SLA drum: FAIL t={'hub': np.float64(1.776), 'rim': np.float64(0.45), 'face': np.float64(0.684)} mass 3.15 g m_eq 1.291 g run 8.88 um/N [277s]
+S SLA web
+  it0 hub=0.500(q7.93,LC8) rim=0.500(q3.61,LC7) web=0.500(q11.43,LC8)  m_eq=1.028 g
+  it1 hub=0.800(q3.58,LC8) rim=0.800(q1.47,LC7) web=0.800(q4.11,LC8)  m_eq=1.573 g

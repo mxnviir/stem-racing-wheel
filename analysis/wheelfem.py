@@ -124,6 +124,19 @@ class Model:
         self.nn = self.X.shape[1]
         self.ndofs = 3 * self.nn
 
+    def reentrant_corners(self):
+        """(r, z) points where three of the four quadrants around a block corner are solid: sharp
+        internal corners, where linear-elastic stress is singular (mesh-dependent, unbounded)."""
+        d = self.d; eps = 1e-4
+        solid = lambda r, z: any(b.r0 < r < b.r1 and b.z0 < z < b.z1 for b in d.blocks)
+        pts = {(r, z) for b in d.blocks for r in (b.r0, b.r1) for z in (b.z0, b.z1)}
+        out = []
+        for r, z in pts:
+            n = sum(solid(r + a * eps, z + c * eps) for a in (-1, 1) for c in (-1, 1))
+            if n == 3:
+                out.append((r, z))
+        return np.array(out).reshape(-1, 2)
+
     def _check_theta_axis(self):
         """at="surface" assumes reference axis 2 runs along theta (true for MeshHex.init_tensor(r, th, z))."""
         P = np.array([[0.5, 0.5], [0.5, 0.5], [0.0, 1.0]])
@@ -259,29 +272,60 @@ class Model:
         return [U[:, k] for k in range(U.shape[1])] if multi else U[:, 0]
 
     # ---------------- post ----------------------
-    def stresses(self, u, by="mat", at="surface", el_filter=None):
+    def stresses(self, u, by="mat", at="surface", el_filter=None, corner_excl=0.5):
         """Max von Mises and max principal stress, grouped by material (by="mat", keyed by material
         name) or by block (by="block", keyed by block index). at = "surface" (default: wall surfaces,
-        theta-Gauss stations), "nodes" (27 element nodes) or "gauss" (3x3x3 interior Gauss points)."""
+        theta-Gauss stations), "nodes" (27 element nodes) or "gauss" (3x3x3 interior Gauss points).
+
+        * Stress tensors at coincident points of elements of the SAME material are averaged (nodal
+          averaging; removes inter-element jumps, which reach ~10-15 % at wall junctions). Points on
+          an interface between different materials keep each side's own value.
+        * by="block": a point shared by several blocks counts for the thinnest of them (the wall
+          whose bending causes it), e.g. a face-root stress is charged to the face, not the hub.
+        * Points within corner_excl (mm, in the r-z section) of a sharp re-entrant corner are skipped:
+          the stress there is a singularity of the idealised sharp corner. Junction stress = nominal x
+          Kt of the real fillet, checked separately. corner_excl=0 keeps every point."""
+        d = self.d
+        el = np.arange(self.mesh.nelements) if el_filter is None else np.nonzero(el_filter)[0]
+        Sv, Xv, Bv, Mv = [], [], [], []
+        for i, M in enumerate(d.materials):
+            C = M.C()
+            for b, G, gd in self._chunks(None, el[self.mat[el] == i], at=at):
+                s = np.einsum('eqia,ea->eqi', _Bmat(G), u[gd]) @ C.T          # (ne, nq, 6)
+                X = np.asarray(b.global_coordinates().value)                    # (3, ne, nq)
+                Sv.append(s.reshape(-1, 6)); Xv.append(X.reshape(3, -1).T)
+                Bv.append(np.repeat(self.blk[b.tind], s.shape[1])); Mv.append(np.full(s.shape[0] * s.shape[1], i))
+        if not Sv:
+            return {}
+        S, X, blk, mat = np.concatenate(Sv), np.concatenate(Xv), np.concatenate(Bv), np.concatenate(Mv)
+        key = np.c_[np.round(X / 1e-6).astype(np.int64), mat]
+        _, inv = np.unique(key, axis=0, return_inverse=True)
+        inv = inv.ravel(); n = inv.max() + 1
+        cnt = np.bincount(inv, minlength=n)
+        Sa = np.stack([np.bincount(inv, S[:, k], n) for k in range(6)], 1) / cnt[:, None]
+        tb = np.array([min(b.r1 - b.r0, b.z1 - b.z0) for b in d.blocks])
+        own = np.zeros(n, int)
+        order = np.argsort(-tb[blk])                    # thinnest last, so it wins the assignment
+        own[inv[order]] = blk[order]
+        Xa = np.zeros((n, 3)); Xa[inv] = X; mata = np.zeros(n, int); mata[inv] = mat
+        sx, sy, sz, tyz, txz, txy = Sa.T
+        vm = np.sqrt(0.5 * ((sx - sy)**2 + (sy - sz)**2 + (sz - sx)**2) + 3 * (tyz**2 + txz**2 + txy**2))
+        T = np.stack([np.stack([sx, txy, txz], -1), np.stack([txy, sy, tyz], -1), np.stack([txz, tyz, sz], -1)], -2)
+        s1 = np.linalg.eigvalsh(T)[:, -1]
+        keep = np.ones(n, bool)
+        if corner_excl > 0:
+            r, z = np.hypot(Xa[:, 0], Xa[:, 1]), Xa[:, 2]
+            for r0, z0 in self.reentrant_corners():
+                keep &= np.hypot(r - r0, z - z0) >= corner_excl - 1e-9
         out = {}
-        groups = ([(M.name, M, np.nonzero(self.mat == i)[0]) for i, M in enumerate(self.d.materials)] if by == "mat"
-                  else [(ib, self.d.materials[b.mat], np.nonzero(self.blk == ib)[0]) for ib, b in enumerate(self.d.blocks)])
-        for key, M, el in groups:
-            if el_filter is not None:
-                el = el[el_filter[el]]
-            C = M.C(); vm_max = 0.0; s1_max = -np.inf; any_el = False
-            for b, G, gd in self._chunks(None, el, at=at):
-                any_el = True
-                B = _Bmat(G)
-                eps = np.einsum('eqia,ea->eqi', B, u[gd])
-                s = eps @ C.T                                   # (ne, nq, 6)
-                sx, sy, sz, tyz, txz, txy = np.moveaxis(s, -1, 0)
-                vm = np.sqrt(0.5 * ((sx - sy)**2 + (sy - sz)**2 + (sz - sx)**2) + 3 * (tyz**2 + txz**2 + txy**2))
-                S = np.stack([np.stack([sx, txy, txz], -1), np.stack([txy, sy, tyz], -1), np.stack([txz, tyz, sz], -1)], -2)
-                s1 = np.linalg.eigvalsh(S)[..., -1]
-                vm_max = max(vm_max, float(vm.max())); s1_max = max(s1_max, float(s1.max()))
-            if any_el:
-                out[key] = dict(vm=vm_max, s1=s1_max, strength=M.strength, mat=M.name)
+        groups = ([(Mt.name, Mt, mata == i) for i, Mt in enumerate(d.materials)] if by == "mat"
+                  else [(ib, d.materials[b.mat], own == ib) for ib, b in enumerate(d.blocks)])
+        for k, Mt, sel in groups:
+            if not sel.any():
+                continue
+            sk = sel & keep
+            out[k] = dict(vm=float(vm[sk].max()) if sk.any() else 0.0, s1=float(s1[sk].max()) if sk.any() else 0.0,
+                          strength=Mt.strength, mat=Mt.name)
         return out
 
     def mass_props(self):
