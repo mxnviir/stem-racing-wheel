@@ -2,3 +2,4 @@ h_load 0.42 phase +0 (275985 dof): support q 0.901 LC4 at r 4.46 th 92 z 1.16 | 
 h_load 0.42 phase +90 (274467 dof): support q 0.896 LC4 at r 4.59 th 90 z 1.09 | hub q 0.646 LC4 at r 4.0 th 100 z 0.0 | rim q 0.754 LC7 at r 14.1 th 90 z 2.49 [26s]
 h_load 0.32 phase +0 (322929 dof): support q 0.942 LC4 at r 4.53 th 90 z 1.13 | hub q 0.646 LC4 at r 4.0 th 97 z 0.0 | rim q 0.756 LC7 at r 14.1 th 90 z 2.49 [33s]
 h_load 0.32 phase +90 (321468 dof): support q 0.937 LC4 at r 4.53 th 90 z 1.13 | hub q 0.646 LC4 at r 4.0 th 97 z 0.0 | rim q 0.756 LC7 at r 14.1 th -90 z 2.49 [33s]
+h_load 0.25 phase +0 (405897 dof): support q 0.958 LC4 at r 4.59 th 91 z 1.09 | hub q 0.659 LC4 at r 3.99 th 90 z 0.0 | rim q 0.762 LC7 at r 13.4 th -90 z 2.43 [40s]
