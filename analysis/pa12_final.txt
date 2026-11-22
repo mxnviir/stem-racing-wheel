@@ -22,3 +22,4 @@ allowable (max of s1, vM) = 21.0 MPa
     modes Hz: 1701, 4217, 4861, 4886, 7445, 7509, 7646, 7649  (rotation 333 Hz)
   phase +90
     LC2 sym : lambda_1 = 15.92  (36s)
+    LC2 anti: lambda_1 = 16.71  (61s)
