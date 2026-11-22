@@ -33,3 +33,5 @@ allowable (max of s1, vM) = 21.0 MPa
     LC7 anti: lambda_1 = 7.77  (83s)
     LC8 sym : lambda_1 = 27.62  (37s)
     LC8 anti: lambda_1 = 39.28  (45s)
+    modes Hz: 1700, 4218, 4868, 4879, 7450, 7509, 7644, 7646  (rotation 333 Hz)
+wrote pa12_final.json, pa12_final.step
