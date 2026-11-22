@@ -4,3 +4,6 @@ allowable (max of s1, vM) = 21.0 MPa
 1. mesh convergence (q = max(s1, vM) / allowable, worst over load cases and spoke phases)
   h 1.40/0.60 (178785 dof): hub 0.633 (LC4@+0.0) rim 0.752 (LC7@+90.0) support 0.884 (LC4@+90.0) | m_eq 1.3585 g | LC1_um_per_N 5.69 LC1_edge_um_per_N 0.16 LC3_dD_um 217.22 LC4_um 125.62 LC5_dD_um 13.33 LC6_edge_um 13.78 LC7_dD_edge_um 31.04 LC8_lip_um 174.05 [32s]
   h 1.00/0.42 (276273 dof): hub 0.632 (LC4@+0.0) rim 0.755 (LC6@+0.0) support 0.902 (LC4@+0.0) | m_eq 1.3596 g | LC1_um_per_N 5.72 LC1_edge_um_per_N 0.16 LC3_dD_um 218.28 LC4_um 128.40 LC5_dD_um 13.25 LC6_edge_um 13.71 LC7_dD_edge_um 31.03 LC8_lip_um 178.29 [52s]
+  h 0.80/0.32 (415923 dof): hub 0.646 (LC4@+90.0) rim 0.757 (LC7@+0.0) support 0.960 (LC4@+90.0) | m_eq 1.3599 g | LC1_um_per_N 5.73 LC1_edge_um_per_N 0.16 LC3_dD_um 218.74 LC4_um 129.63 LC5_dD_um 13.20 LC6_edge_um 13.68 LC7_dD_edge_um 31.03 LC8_lip_um 180.62 [85s]
+2./3. buckling (load factor on the 20 N handling loads) and natural frequencies, middle mesh level
+  phase +0
