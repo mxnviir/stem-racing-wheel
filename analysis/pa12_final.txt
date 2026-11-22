@@ -30,3 +30,4 @@ allowable (max of s1, vM) = 21.0 MPa
     LC6 sym : lambda_1 = 22.72  (108s)
     LC6 anti: lambda_1 = 40.30  (148s)
     LC7 sym : lambda_1 = 13.28  (46s)
+    LC7 anti: lambda_1 = 7.77  (83s)
