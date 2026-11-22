@@ -7,3 +7,4 @@ allowable (max of s1, vM) = 21.0 MPa
   h 0.80/0.32 (415923 dof): hub 0.646 (LC4@+90.0) rim 0.757 (LC7@+0.0) support 0.960 (LC4@+90.0) | m_eq 1.3599 g | LC1_um_per_N 5.73 LC1_edge_um_per_N 0.16 LC3_dD_um 218.74 LC4_um 129.63 LC5_dD_um 13.20 LC6_edge_um 13.68 LC7_dD_edge_um 31.03 LC8_lip_um 180.62 [85s]
 2./3. buckling (load factor on the 20 N handling loads) and natural frequencies, middle mesh level
   phase +0
+    LC2 sym : lambda_1 = 15.88  (38s)
