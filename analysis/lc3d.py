@@ -65,7 +65,7 @@ def setup(g, m: Model3D):
                 + m.traction_weighted(m.boundary_facets(lambda x: near(B, 12)(x) & (x[2] < EDGE + 0.6)), prof(B, 6, EDGE), up, F / 2)[0])
     # thumb: -z facing facets near the dia-8 circle at r = 8.5, outermost layer (min z) only
     rc = lambda x: np.sqrt(x[0]**2 + (x[1] - 8.5)**2)
-    bf = m.boundary_facets(lambda x: rc(x) < 4.6)
+    bf = m.boundary_facets(lambda x: (rc(x) < 4.6) & ~g.roles(x)["rim"])   # the rim lip is LC8's job
     n = m.facet_normals(bf)
     bf = bf[n[2] < -0.95]
     zf = m.mesh.p[2, m.mesh.facets[:, bf]].mean(axis=0)
