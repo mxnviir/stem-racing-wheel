@@ -21,3 +21,6 @@ S SLA drum
   it5 face=0.830(q0.79,LC4) hub=0.788(q1.02,LC4) rim=0.439(q0.91,LC6)  m_eq=1.322 g
   it6 face=0.737(q1.13,LC4) hub=0.821(q1.10,LC4) rim=0.418(q1.03,LC6)  m_eq=1.232 g
   it7 face=0.808(q1.00,LC4) hub=0.887(q0.88,LC4) rim=0.438(q0.92,LC6)  m_eq=1.310 g
+  it8 face=0.833(q0.96,LC4) hub=0.834(q0.92,LC4) rim=0.421(q0.96,LC6)  m_eq=1.299 g
+=> S SLA drum: PASS t={'rim': np.float64(0.421), 'face': np.float64(0.833), 'hub': np.float64(0.834)} mass 2.81 g m_eq 1.299 g run 9.72 um/N [229s]
+S SLA web
