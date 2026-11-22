@@ -38,7 +38,7 @@ def render(ax, m, field=None, vmax=None, base="#d9cdb5", mirror=True, elev=24, a
     else:
         v = np.concatenate([x for x in vals if x is not None])
         vmax = vmax or np.percentile(v, 99.8)
-        rgb = cm.get_cmap(cmap)(colors.Normalize(0, vmax, clip=True)(v))[:, :3]
+        rgb = matplotlib.colormaps[cmap](colors.Normalize(0, vmax, clip=True)(v))[:, :3]
         fc = np.clip(rgb * (0.55 + 0.45 * k)[:, None], 0, 1)
     ax.add_collection3d(Poly3DCollection(T, facecolors=fc, edgecolors="none", linewidths=0))
     R = np.abs(P[:2]).max() * 1.02; W = P[2].max()

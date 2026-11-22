@@ -13,7 +13,7 @@ from render3d import render
 os.makedirs("renders3d", exist_ok=True)
 E = json.load(open("pa12_explore.json"))
 names = ["W  central web", "WL central web + lips", "S6L 6 spokes + lips", "S6LP 6 spokes + lips + pads",
-         "DF2 drum, faces 0.70->1.05 + powder holes"]
+         "DF3 drum, faces 0.70->1.12 + powder holes"]
 
 # 1. concept overview (geometry, sized parameters)
 f = plt.figure(figsize=(4.0 * len(names), 4.6))
@@ -24,8 +24,8 @@ for i, n in enumerate(names):
     ok = "PASS" if c["ok"] else "did not converge"
     render(f.add_subplot(1, len(names), i + 1, projection="3d"), m,
            title=f"{n}\nm_eq {c['m_eq']:.2f} g, mass {c['mass']:.2f} g ({ok})")
-f.suptitle("SLS PA12 rear-wheel concepts, sized to all 8 load cases (Ø28.2 × 17.2 mm)", fontsize=12)
-f.tight_layout(); f.savefig("renders3d/pa12_concepts.png", dpi=130); plt.close(f)
+f.suptitle("SLS PA12 rear-wheel concepts, sized to all 8 load cases (Ø28.2 × 17.2 mm)", fontsize=12, y=0.99)
+f.tight_layout(rect=(0, 0, 1, 0.93)); f.savefig("renders3d/pa12_concepts.png", dpi=130); plt.close(f)
 
 # 2. final design: geometry front/back + stress for the governing cases
 c = E[names[-1]]
@@ -43,7 +43,7 @@ for k, (lc, title) in enumerate([("LC4", "LC4 thumb push 20 N"), ("LC7", "LC7 ri
     sm = render(ax, m, field=np.clip(s1, 0, None)[:m.mesh.nvertices], vmax=ALLOW,
                 title=f"{title}: max principal (MPa), allowable {ALLOW:.0f}", elev=22, azim=-60 if lc != "LC8" else -60)
     f.colorbar(sm, ax=ax, shrink=0.6, pad=0.0)
-f.suptitle(f"Final SLS PA12 rear wheel: closed drum, rim 0.70, faces 0.70 -> 1.05 mm, hub 1.0 mm, 1 mm fillets | "
+f.suptitle(f"Final SLS PA12 rear wheel: closed drum, rim 0.70, faces 0.70 -> 1.12 mm, hub 1.0 mm, 1 mm fillets | "
            f"m_eq {c['m_eq']:.3f} g, mass {c['mass']:.2f} g (incl. 2 x MR63)", fontsize=11)
 f.tight_layout(); f.savefig("renders3d/pa12_final.png", dpi=130); plt.close(f)
 print("wrote renders3d/")

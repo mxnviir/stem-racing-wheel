@@ -58,3 +58,37 @@ Findings:
 
 ## Open decisions (asked 2026-11-22, round 2)
 Face architecture (drum vs web), realistic minimum walls / CF tube sourcing, whether to add a race-time simulator and CFD.
+
+## Stage 4 — stress recovery, rim-edge loads (2026-11-22, `wheelfem.py`, `validate_stress.py`)
+- **V4 resolved.** Nodal stresses over-read by 3–8 %: curved quadratic hexes carry a parasitic membrane stress that is parabolic in θ, largest at the element ends. Gauss points under-read by up to 20 % (inside the wall). New default `at="surface"`: wall surfaces in r/z, 2-point Gauss stations in θ → narrow ring within 0.5 % of Winkler on every mesh. The remaining +7 % on a 5 mm-wide ring is the physical anticlastic free-edge effect (mesh-converged).
+- Stress recovery also averages per material, charges junction points to the thinner wall, and skips 0.5 mm around sharp re-entrant corners (singular).
+- **Rim-edge load cases added:** LC6 edge press, LC7 edge pinch (20 N on a 3 mm band at one rim edge), LC8 rim-lip axial push (20 N, outer 1 mm of the end face). Old LC1–LC4 never loaded an overhanging rim edge; with them, a central web loses to a drum (Al web 1.67 g vs Al drum 1.47 g m_eq). The hex re-sizing of all families was paused at the user's request (SLS PA12 first).
+
+## Stage 5 — 3D pipeline and the SLS PA12 wheel (2026-11-22)
+**Why no spokes before:** the hex pipeline sweeps an r–z cross-section around the axis, so it could only represent axisymmetric wheels. Spokes and θ-varying rim thickness were impossible by construction, not rejected.
+
+**New 3D pipeline** (`geom3d.py`, `fem3d.py`, `lc3d.py`, `verify3d.py`): gmsh/OpenCASCADE parametric CAD (rim thickness profile along the width, inward lips, θ-varying rim pads at spoke roots, spoke sets with N / width taper / axial taper / phase, web, drum faces with radial taper, powder-escape holes, automatic fillets on every concave edge), P2 tetrahedra, PARDISO, linear buckling (symmetric + antisymmetric mode families), modes, STEP export.
+- Verification: ring pinch vs Winkler/Roark within 0.6 % / 0.1 % from 1 to 4 elements through the wall; PA12 web vs the validated hex solver within 3 % on every load case.
+- Loads are smooth patch profiles (cos² in θ, smoothed band edges): uniform patches narrower than an element gave mesh-dependent load distributions (edge deflection drifted 14 %).
+- Spoked wheels are evaluated with a spoke under the load and between spokes (worst case used).
+
+**SLS PA12 (PA2200-class):** E 1700 MPa, ρ 930 kg/m³, UTS 42 MPa (Z, conservative). Allowable max(σ₁, σ_vM) = 21 MPa (SF 2). Min wall 0.7 mm; hub wall ≥ 1.0 mm (bearing retention); 1.0 mm junction fillets (at 0.5 mm the spoke-root Kt grew with spoke thickness and sizing stalled).
+
+| concept (sized to LC2–LC8) | m_eq g | mass g | governing |
+|---|---|---|---|
+| central web | 2.10 | 3.45 | rim LC7, web LC8 |
+| central web + lips | 2.13 | 3.61 | LC7 |
+| 6 spokes + lips | ~1.94–2.05 (oscillated, not converged) | 3.2–3.4 | LC8 at spoke roots, LC7 rim |
+| 6 spokes + lips + θ-pads | 2.01 | 3.22 | LC8, LC7 |
+| twin 6-spoke planes at the edges | > 1.9 and still failing (stopped; meshing fragile) | — | LC6/LC7 |
+| **closed drum** | **1.36** | **2.78** | faces LC4, everything else at min gauge |
+
+**Why spokes lose for PA12:** the 20 N rim-edge and rim-lip loads act on an 8.6 mm overhang (rim edge to a central web/spokes) or produce 20 N × 14 mm ≈ 280 N·mm at the spoke roots. Low-modulus PA12 then needs 1.2–1.4 mm rims and 2.5–3 mm spokes. A drum's faces sit at the rim edges and carry those loads in-plane, so the rim stays at the 0.7 mm minimum and only the faces are sized (by the thumb push).
+
+**Final SLS PA12 rear wheel** (`pa12_final.step`, `renders3d/pa12_final.png`): closed drum, rim 0.70 mm, faces 0.70 mm at the rim tapering to 1.12 mm at the hub, hub 1.0 mm, 1 mm fillets, 2 × Ø3 powder-escape holes at r = 8.5 in the inner face (needed: a sealed SLS cavity cannot be de-powdered; inner face keeps the outer face aero-clean). **m_eq 1.370 g, mass 2.83 g** (incl. 2 × MR63).
+- Stress (converged): governing q = 0.92 at the face–hub fillet under the thumb push (local refinement 0.25 → 0.20 mm: 0.903 → 0.918; extrapolated ≈ 0.93). Rim 0.75 (edge pinch), hub 0.62. All other cases lower. Hole position (under/between loads) changes q by < 1 %.
+- Global convergence (h 1.4 → 1.0 → 0.8 mm, 0.18–0.42 M dof): deflections and m_eq within 1 %.
+- Buckling (taper-1.5 design, i.e. conservative): lowest load factor 7.7 (pinch / edge pinch, antisymmetric), ≥ 13 for everything else.
+- First natural frequency 1700 Hz = 5.1 × the 333 Hz rotation.
+- Stiffness: running 5.7 µm/N at the contact centre, 0.15 µm/N at the edge; spin growth 13 µm on diameter at 20 000 rpm (≤ runout target scale: check balance/runout together).
+- Not yet modelled: bearing press-fit / bonded seat stresses (clamped-seat singularity excluded within 0.5 mm), SLS anisotropy beyond using the Z strength, creep, real contact.

@@ -5,9 +5,11 @@ Research code for designing the lightest robust wheel for a STEM Racing Professi
 SLS PA12, FDM ABS and carbon fibre. The analysis is a scripted, reproducible open-source FEA
 pipeline. Final designs are meant to be cross-checked independently in Ansys Student.
 
-> **Status: paused mid-stage 4** (surface-stress validation and edge load cases). See
-> [What's left](#whats-left-and-why). The design history and every decision are in
-> [`DESIGN_LOG.md`](DESIGN_LOG.md).
+> **Status (2026-11-22): stage 5 done for SLS PA12.** A general 3D pipeline (spokes, variable rim thickness,
+> fillets, buckling) is built and verified, and the SLS PA12 rear wheel is sized, converged and exported
+> (`analysis/pa12_final.step`): a closed drum with tapered faces and powder-escape holes, **m_eq 1.37 g, mass 2.83 g**.
+> See [§8](#8-3d-pipeline-and-the-sls-pa12-wheel) and [`DESIGN_LOG.md`](DESIGN_LOG.md). The hex-pipeline re-sizing of the
+> other material families with the new rim-edge load cases is paused (PA12 first, at the team's request).
 
 ---
 
@@ -196,7 +198,18 @@ towards web designs. Both issues are being fixed (§6).
 
 ## 6. What's left and why
 
-### Paused work in progress
+### Done since the pause (details in DESIGN_LOG stages 4–5)
+- V4 resolved (curved-element parasitic membrane stress; new `at="surface"` recovery within 0.5 % of Winkler).
+- Rim-edge load cases LC6–LC8 added (both pipelines).
+- 3D pipeline with spokes / variable rim thickness / fillets / buckling; SLS PA12 wheel finished (§8).
+
+### Still open
+- Re-size the Al / Ti / SLA / CF / hybrid families with LC6–LC8 (hex results in `size_results.json` are partial)
+  and decide whether any of them should move to the 3D pipeline (spokes are now possible).
+- Minimum-wall crossover sweep (`sweep_tmin.py`, written, not run).
+- Bearing seat press-fit / bonded joint model (the clamped seat is currently excluded within 0.5 mm).
+
+### Original notes (kept for history)
 1. **Resolve stress evaluation (V4).** Gauss points under-read surface bending stress by up to 10 % at one element
    per wall. Nodal (surface) values over-read the ring theory by 12–17 %. The cause is not yet separated; candidates are
    load-patch proximity, curved-beam/axial terms, and the vM vs uniaxial comparison. *Why it matters:* sizing runs
@@ -248,3 +261,32 @@ Memory: the largest thin-wall models are ~130–150k dof and need ~2–3 GB. Sol
 automatically to avoid running out of memory.
 
 The 2026–27 Technical Regulations PDF is copyright STEM Racing Ltd and is not included.
+
+---
+
+## 8. 3D pipeline and the SLS PA12 wheel
+
+| File | Role |
+|---|---|
+| `geom3d.py` | parametric OCC geometry: rim thickness profile + lips, θ-varying pads, spoke sets (N, width/axial taper, phase), web, drum (tapered faces, powder holes), automatic fillets of every concave edge, half model, local mesh refinement |
+| `fem3d.py` | P2 tetrahedra: vectorised K / M / K_G, PARDISO, nodal-averaged stresses, modes, linear buckling |
+| `lc3d.py` | LC1–LC8 with smooth (mesh-independent) patch profiles; two spoke phases; pinch cases with minimal rigid-body restraint |
+| `verify3d.py` | ring vs Winkler/Roark (< 0.6 %), PA12 web vs the hex solver (< 3 %) → `verify3d.txt` |
+| `pa12.py` | SLS PA12 material/criteria, concept builders, fully-stressed sizing → `pa12_explore.json` |
+| `drum_study.py`, `conv_local.py`, `pa12_final.py` | face-taper/powder-hole study, local peak convergence, final verification (convergence, buckling, modes, STEP) |
+| `render3d.py`, `render_final.py` | renders → `renders3d/` |
+
+**Result:** for SLS PA12, a closed drum (rim 0.70, faces 0.70 → 1.12 mm, hub 1.0, 1 mm fillets, 2 × Ø3 holes in the inner face)
+beats every spoked/web layout by ~0.6 g of m_eq per wheel (1.37 vs ≥ 2.0 g), because its faces carry the rim-edge loads at
+the rim edges. Governing check: thumb push at the face–hub fillet, q = 0.92 converged (SF 2 on Z-direction UTS, ≈ 8 % spare).
+Buckling ≥ 7.7 × the handling loads, f₁ = 1700 Hz (5.1 × rotation).
+
+```bash
+cd analysis
+../.venv/bin/python verify3d.py
+../.venv/bin/python pa12.py                 # concept sizing (~1 h)
+../.venv/bin/python drum_study.py
+../.venv/bin/python pa12_final.py "DF3 drum, faces 0.70->1.12 + powder holes"   # ~45 min, ~8 GB
+../.venv/bin/python render_final.py
+```
+gmsh needs the system OpenGL libraries: `apt-get install -y libglu1-mesa libxcursor1 libxft2 libxinerama1 libxrender1`.
