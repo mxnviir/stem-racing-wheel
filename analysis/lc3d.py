@@ -21,6 +21,7 @@ from fem3d import Model3D
 F = 20.0
 EDGE = 3.0
 OMEGA = 20000 * 2 * np.pi / 60
+SEAT_EXCL = 0.5
 LCS = ("LC2", "LC3", "LC4", "LC5", "LC6", "LC7", "LC8")
 
 
@@ -102,6 +103,14 @@ def run(g, m: Model3D, K=None, keep_u=False):
     U.update(zip(["LC3", "LC7"], m.solve(K, [f["LC3"], f["LC7"]], S["Dpinch"])))
     U["LC2"] = 20 * U["LC1"]
     groups = g.roles(m.X)
+    # the fully clamped bearing seat ends in a boundary-condition singularity (rigid seat meets free bore/face);
+    # points within SEAT_EXCL of a clamped seat are left out of the stress check (bearing seats need a
+    # contact / press-fit model, see README later stages)
+    r, z = np.hypot(m.X[0], m.X[1]), m.X[2]
+    near_seat = np.zeros(m.nn, bool)
+    for z0, z1 in g.seats:
+        near_seat |= (r < g.r_bore + SEAT_EXCL) & (z > z0 - SEAT_EXCL) & (z < z1 + SEAT_EXCL)
+    groups = {k: v & ~near_seat for k, v in groups.items()}
     out = dict(**m.mass_props(), ndofs=m.ndofs, thumb_area=S["thumb_area"])
     out["m_eq_g"] = out["Izz_gmm2"] / g.R**2
     for k, u in U.items():

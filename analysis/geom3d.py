@@ -267,7 +267,7 @@ def build(g: Wheel, h=0.6, h_load=None, half=True, step_file=None, verbose=False
     # mesh sizes
     gmsh.option.setNumber("Mesh.MeshSizeMax", h)
     gmsh.option.setNumber("Mesh.MeshSizeMin", min(0.25, h, h_load or h))
-    gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", 10)
+    gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", max(10, round(14.0 / h)))   # refines fillets with h
     gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 1)
     gmsh.option.setNumber("Mesh.Algorithm3D", 10)        # HXT
     gmsh.option.setNumber("Mesh.Optimize", 1)
