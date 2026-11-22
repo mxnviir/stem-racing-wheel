@@ -7,7 +7,7 @@ Final verification of the selected SLS PA12 wheel:
   4. STEP export of the full wheel, renders of geometry and stress
 Usage: python pa12_final.py "<candidate name in pa12_explore.json>"
 """
-import sys, json, time
+import sys, json, time, gc
 import numpy as np
 from geom3d import build
 from fem3d import Model3D
@@ -42,7 +42,9 @@ def buckling(g, h, h_load, log):
             l, _ = m.eigs(K, KG, D, k=4, mode="buckling")
             lam.append(float(l[0]) if len(l) else float("inf"))
             log(f"    {lc} {fam:4s}: lambda_1 = {lam[-1]:.2f}  ({time.time()-t0:.0f}s)")
+            gc.collect()
         out[lc] = min(lam)
+        del KG; gc.collect()
     Mm = m.mass_matrix()
     S0 = lc3d.setup(g, m)
     f_s, _ = m.eigs(K, Mm, S0["Dbore"], k=4, mode="modes")

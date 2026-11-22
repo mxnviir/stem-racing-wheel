@@ -204,12 +204,14 @@ class Model3D:
             # K phi = w2 M phi  ->  K^-1 M phi = (1/w2) phi : largest eigenvalues of K^-1 M
             C = spla.LinearOperator(Ac.shape, matvec=lambda x: op @ (Bc @ x), dtype=float)
             mu, V = spla.eigs(C, k=k, which="LM")
+            solver.free_memory(everything=True)
             mu = np.real(mu); o = np.argsort(-mu)
             w2 = 1.0 / mu[o]
             return np.sqrt(np.abs(w2)) / (2 * np.pi), np.real(V[:, o])
         # (K + l KG) phi = 0  ->  K^-1 KG phi = -(1/l) phi ; positive l <-> most negative mu
         C = spla.LinearOperator(Ac.shape, matvec=lambda x: op @ (Bc @ x), dtype=float)
         mu, V = spla.eigs(C, k=k, which="LM")
+        solver.free_memory(everything=True)
         mu = np.real(mu)
         lam = np.array(sorted(-1.0 / m for m in mu if m < 0))
         return lam, None
