@@ -19,3 +19,5 @@ allowable (max of s1, vM) = 21.0 MPa
     LC7 anti: lambda_1 = 7.79  (77s)
     LC8 sym : lambda_1 = 27.63  (44s)
     LC8 anti: lambda_1 = 39.27  (44s)
+    modes Hz: 1701, 4217, 4861, 4886, 7445, 7509, 7646, 7649  (rotation 333 Hz)
+  phase +90
