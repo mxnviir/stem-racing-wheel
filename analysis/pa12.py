@@ -33,9 +33,12 @@ def evaluate(g, h=1.4, h_load=0.6, verbose=False):
     for dph in phases(g):
         gg = g.rotated(dph)
         t0 = time.time()
-        for k in range(4):                 # mesher failures are rare and size-dependent: perturb and retry
+        for k in range(4):     # rare OCC/mesher failures (axial taper + fillet combos): reduce the taper, retry
             try:
-                P, T, info = build(gg, h=h * (1 - 0.07 * k), h_load=h_load * (1 - 0.05 * k))
+                fac = [1.0, 0.5, 0.0, 0.0][k]      # fraction of the axial spoke taper kept
+                gk = dataclasses.replace(gg, spokes=[dataclasses.replace(sp, ts_hub=sp.ts_rim + fac * (sp.ts_hub - sp.ts_rim))
+                                                     for sp in gg.spokes])
+                P, T, info = build(gk, h=h * (1 - 0.05 * k), h_load=h_load)
                 break
             except Exception as e:
                 if k == 3:
