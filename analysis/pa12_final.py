@@ -14,7 +14,7 @@ from fem3d import Model3D
 import lc3d
 from pa12 import BUILDERS, PA12_SLS, ALLOW, BEAR_M, BEAR_I, evaluate, phases
 
-LEVELS = [(1.4, 0.6), (1.0, 0.42), (0.75, 0.3)]
+LEVELS = [(1.4, 0.6), (1.0, 0.42), (0.8, 0.32)]
 F_ROT = 20000 / 60
 
 
