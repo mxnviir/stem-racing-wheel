@@ -280,7 +280,16 @@ def build(g: Wheel, h=0.6, h_load=None, half=True, step_file=None, verbose=False
             f.setNumber(b, "Thickness", 1.5)
             boxes.append(b)
         m = f.add("Min"); f.setNumbers(m, "FieldsList", boxes); f.setAsBackgroundMesh(m)
-    gmsh.model.mesh.generate(3)
+    for alg in (10, 1, 4):                 # HXT, then Delaunay, then Frontal on failure
+        try:
+            gmsh.option.setNumber("Mesh.Algorithm3D", alg)
+            gmsh.model.mesh.generate(3)
+            break
+        except Exception:
+            gmsh.model.mesh.clear()
+            if alg == 4:
+                gmsh.finalize()
+                raise
     nt, xyz, _ = gmsh.model.mesh.getNodes()
     et, etags, enodes = gmsh.model.mesh.getElements(3)
     tets = np.array(enodes[list(et).index(4)], dtype=np.int64).reshape(-1, 4)
