@@ -25,7 +25,7 @@ BEAR_M, BEAR_I = 2 * 0.32, 2 * 0.18 * 2.7**2     # two MR63 (as in concepts.py)
 
 
 def phases(g):
-    Ns = [s.N for s in g.spokes if s.N > 0]
+    Ns = [s.N for s in g.spokes if s.N > 0] + ([g.holes_n] if g.holes_n > 0 and g.drum_t > 0 else [])
     return [0.0] if not Ns else [0.0, 180.0 / Ns[0]]
 
 
@@ -91,7 +91,8 @@ def spoke_wheel(p):
 
 def drum_wheel(p):
     return Wheel(name="drum", rim_t=[(0, p["rim"]), (W, p["rim"])], t_hub=p["hub"], hub_z=(0, W),
-                 seats=[(0, 2.5), (W - 2.5, W)], spokes=[], drum_t=p["sup"], rf=p.get("rf", RF))
+                 seats=[(0, 2.5), (W - 2.5, W)], spokes=[], drum_t=p["sup"], drum_t_hub=p["sup"] * p.get("ftaper", 1.0), rf=p.get("rf", RF),
+                 holes_n=int(p.get("holes_n", 0)), holes_d=p.get("holes_d", 3.0), holes_r=p.get("holes_r", 8.5))
 
 
 def twin_spoke_wheel(p):

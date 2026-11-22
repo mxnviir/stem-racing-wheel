@@ -46,6 +46,11 @@ class Wheel:
     lip_t: float = 0.8          # axial thickness of the lips
     spokes: list = field(default_factory=lambda: [SpokeSet()])
     drum_t: float = 0.0         # >0: closed drum faces of this thickness at z = 0 and z = W
+    drum_t_hub: float = 0.0     # face thickness at the hub (0 = same as drum_t, i.e. no taper)
+    holes_n: int = 0            # powder-escape holes (SLS) in the inner face (z = W) of a drum
+    holes_d: float = 3.0        # hole diameter, mm
+    holes_r: float = 8.5        # pitch radius, mm
+    holes_phase_deg: float = 90.0
     pad_t: float = 0.0          # extra rim thickness at spoke roots, smooth cos^2 in theta (0 = none)
     pad_deg: float = 15.0       # half-angle of the pads
     rf: float = 0.5             # fillet radius at concave junctions (0 = sharp)
@@ -81,7 +86,8 @@ class Wheel:
 
     def rotated(self, dphase):
         return dataclasses.replace(self, spokes=[dataclasses.replace(s, phase_deg=s.phase_deg + dphase)
-                                                 for s in self.spokes])
+                                                 for s in self.spokes],
+                                   holes_phase_deg=self.holes_phase_deg + dphase)
 
 
 def _rim(occ, g):
@@ -221,11 +227,11 @@ def build(g: Wheel, h=0.6, h_load=None, half=True, step_file=None, verbose=False
                                  (g.r_bore + g.t_hub, g.hub_z[1]), (g.r_bore, g.hub_z[1])])
     for s in g.spokes:
         parts += _spokes(occ, g, s)
-    if g.drum_t > 0:
-        ri = g.r_bore + g.t_hub / 2
-        for z0 in (0.0, g.W - g.drum_t):
-            parts += _revolve_poly(occ, [(ri, z0), (g.R - g.rim_thickness(z0) / 2, z0),
-                                         (g.R - g.rim_thickness(z0) / 2, z0 + g.drum_t), (ri, z0 + g.drum_t)])
+    if g.drum_t > 0:      # faces flush with the wheel ends; optional radial taper (thicker at the hub)
+        ri, ro = g.r_bore + g.t_hub / 2, g.R - g.rim_thickness(0.0) / 2
+        th = g.drum_t_hub if g.drum_t_hub > 0 else g.drum_t
+        parts += _revolve_poly(occ, [(ri, 0.0), (ro, 0.0), (ro, g.drum_t), (ri, th)])
+        parts += _revolve_poly(occ, [(ri, g.W - th), (ro, g.W - g.drum_t), (ro, g.W), (ri, g.W)])
     parts += _pads(occ, g)
     vol, _ = occ.fuse(parts[:1], parts[1:]) if len(parts) > 1 else (parts, None)
     occ.removeAllDuplicates()
@@ -238,6 +244,15 @@ def build(g: Wheel, h=0.6, h_load=None, half=True, step_file=None, verbose=False
     nfil = nfail = 0
     if g.rf > 0:
         v, nfil, nfail = _fillet_all(gmsh, v, g.rf)
+    if g.holes_n > 0 and g.drum_t > 0:
+        cyl = []
+        for k in range(g.holes_n):
+            a = np.deg2rad(g.holes_phase_deg) + 2 * np.pi * k / g.holes_n
+            cyl.append((3, occ.addCylinder(g.holes_r * np.cos(a), g.holes_r * np.sin(a), g.W - g.drum_t - 0.2,
+                                           0, 0, g.drum_t + 0.4, g.holes_d / 2)))
+        out, _ = occ.cut([(3, v)], cyl)
+        occ.synchronize()
+        v = out[0][1]
     if step_file:
         gmsh.write(step_file)
     if half:
