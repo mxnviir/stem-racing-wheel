@@ -5,3 +5,4 @@ __pycache__/
 analysis/*.log
 analysis/*.npz
 analysis/*_coarse*
+analysis/*.stl
