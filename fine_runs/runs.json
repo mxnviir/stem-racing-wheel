@@ -1,23 +1,125 @@
 {
-  "_comment": "Fine topology-optimisation runs. Each entry: Setup parameters for analysis/topo.py plus t_min (manufacturing minimum wall, enforced on the output geometry) and verify_h (tet size for the full-accuracy check). Loads: radial press + diametral pinch only (20 N, full width, several angles) - no edge, lip or axial loads. Objective: minimum rotational inertia; constraint: von Mises <= 0.9 x (UTS/2) everywhere.",
-  "runs": [
-    {"name": "r01_N6_skin0.7", "note": "baseline SLS PA12, 6-fold symmetry",
-     "setup": {"N": 6, "t_rim": 0.7, "rim_zone": 2.5, "h": 0.5, "h_rim": 0.15, "rf": 1.0, "iters": 220, "lcs": ["press", "pinch"]},
-     "t_min": 0.7, "verify_h": 0.8},
-    {"name": "r02_N5_skin0.7", "note": "5-fold symmetry (lets the optimiser pick 5/10/15 spokes)",
-     "setup": {"N": 5, "t_rim": 0.7, "rim_zone": 2.5, "h": 0.5, "h_rim": 0.15, "rf": 1.0, "iters": 220, "lcs": ["press", "pinch"], "n_phi": 4},
-     "t_min": 0.7, "verify_h": 0.8},
-    {"name": "r03_N4_skin0.7", "note": "4-fold symmetry",
-     "setup": {"N": 4, "t_rim": 0.7, "rim_zone": 2.5, "h": 0.5, "h_rim": 0.15, "rf": 1.0, "iters": 220, "lcs": ["press", "pinch"], "n_phi": 5},
-     "t_min": 0.7, "verify_h": 0.8},
-    {"name": "r04_N8_skin0.7", "note": "8-fold symmetry",
-     "setup": {"N": 8, "t_rim": 0.7, "rim_zone": 2.5, "h": 0.5, "h_rim": 0.15, "rf": 1.0, "iters": 220, "lcs": ["press", "pinch"]},
-     "t_min": 0.7, "verify_h": 0.8},
-    {"name": "r05_N6_skin0.4", "note": "thinner skin for a process that can print 0.4 mm walls (e.g. MJF / fine SLA); still SLS PA12 properties",
-     "setup": {"N": 6, "t_rim": 0.4, "rim_zone": 2.5, "h": 0.5, "h_rim": 0.15, "rf": 0.7, "iters": 220, "lcs": ["press", "pinch"]},
-     "t_min": 0.4, "verify_h": 0.7},
-    {"name": "r06_N6_skin0.7_h0.4", "note": "mesh-refinement check of r01 (needs ~16 GB RAM, slow)",
-     "setup": {"N": 6, "t_rim": 0.7, "rim_zone": 2.5, "h": 0.4, "h_rim": 0.12, "rf": 1.0, "iters": 220, "lcs": ["press", "pinch"]},
-     "t_min": 0.7, "verify_h": 0.7}
-  ]
+ "_comment": "Fine topology-optimisation runs. Each entry: Setup parameters for analysis/topo.py plus t_min (manufacturing minimum wall, enforced on the output geometry) and verify_h (tet size for the full-accuracy check). Loads: radial press + diametral pinch only (20 N, full width, several angles) - no edge, lip or axial loads. Objective: minimum rotational inertia; constraint: von Mises <= 0.9 x (UTS/2) everywhere. n_phi = load angles per symmetry sector, set for ~10 deg spacing (a coarse reference run with 20 deg spacing over-fitted to the sampled angles and failed the full check at the angles in between).",
+ "runs": [
+  {
+   "name": "r01_N6_skin0.7",
+   "note": "baseline SLS PA12, 6-fold symmetry",
+   "setup": {
+    "N": 6,
+    "t_rim": 0.7,
+    "rim_zone": 2.5,
+    "h": 0.5,
+    "h_rim": 0.15,
+    "rf": 1.0,
+    "iters": 220,
+    "lcs": [
+     "press",
+     "pinch"
+    ],
+    "n_phi": 6
+   },
+   "t_min": 0.7,
+   "verify_h": 0.8
+  },
+  {
+   "name": "r02_N5_skin0.7",
+   "note": "5-fold symmetry (lets the optimiser pick 5/10/15 spokes)",
+   "setup": {
+    "N": 5,
+    "t_rim": 0.7,
+    "rim_zone": 2.5,
+    "h": 0.5,
+    "h_rim": 0.15,
+    "rf": 1.0,
+    "iters": 220,
+    "lcs": [
+     "press",
+     "pinch"
+    ],
+    "n_phi": 7
+   },
+   "t_min": 0.7,
+   "verify_h": 0.8
+  },
+  {
+   "name": "r03_N4_skin0.7",
+   "note": "4-fold symmetry",
+   "setup": {
+    "N": 4,
+    "t_rim": 0.7,
+    "rim_zone": 2.5,
+    "h": 0.5,
+    "h_rim": 0.15,
+    "rf": 1.0,
+    "iters": 220,
+    "lcs": [
+     "press",
+     "pinch"
+    ],
+    "n_phi": 9
+   },
+   "t_min": 0.7,
+   "verify_h": 0.8
+  },
+  {
+   "name": "r04_N8_skin0.7",
+   "note": "8-fold symmetry",
+   "setup": {
+    "N": 8,
+    "t_rim": 0.7,
+    "rim_zone": 2.5,
+    "h": 0.5,
+    "h_rim": 0.15,
+    "rf": 1.0,
+    "iters": 220,
+    "lcs": [
+     "press",
+     "pinch"
+    ],
+    "n_phi": 4
+   },
+   "t_min": 0.7,
+   "verify_h": 0.8
+  },
+  {
+   "name": "r05_N6_skin0.4",
+   "note": "thinner skin for a process that can print 0.4 mm walls (e.g. MJF / fine SLA); still SLS PA12 properties",
+   "setup": {
+    "N": 6,
+    "t_rim": 0.4,
+    "rim_zone": 2.5,
+    "h": 0.5,
+    "h_rim": 0.15,
+    "rf": 0.7,
+    "iters": 220,
+    "lcs": [
+     "press",
+     "pinch"
+    ],
+    "n_phi": 6
+   },
+   "t_min": 0.4,
+   "verify_h": 0.7
+  },
+  {
+   "name": "r06_N6_skin0.7_h0.4",
+   "note": "mesh-refinement check of r01 (needs ~16 GB RAM, slow)",
+   "setup": {
+    "N": 6,
+    "t_rim": 0.7,
+    "rim_zone": 2.5,
+    "h": 0.4,
+    "h_rim": 0.12,
+    "rf": 1.0,
+    "iters": 220,
+    "lcs": [
+     "press",
+     "pinch"
+    ],
+    "n_phi": 6
+   },
+   "t_min": 0.7,
+   "verify_h": 0.7
+  }
+ ]
 }
