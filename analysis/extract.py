@@ -45,6 +45,18 @@ def field(s, r, z, nt, rho, voxel):
     return phi, (xs, xs, zs)
 
 
+def add_holes(phi, axes, s, n, d, r_h, side="W", depth=4.0):
+    """Powder-escape holes: n axial cylinders (dia d at radius r_h) cut through the face on one side."""
+    xs, ys, zs = axes
+    X, Y, Z = np.meshgrid(xs, ys, zs, indexing="ij")
+    for k in range(n):
+        a = np.pi / 2 + 2 * np.pi * k / n
+        dist = np.hypot(X - r_h * np.cos(a), Y - r_h * np.sin(a)) - d / 2
+        inz = (Z > s["W"] - depth) if side == "W" else (Z < depth)
+        phi = np.where(inz, np.minimum(phi, dist), phi)
+    return phi
+
+
 def surface(phi, axes, smooth=10):
     from skimage.measure import marching_cubes
     import trimesh
@@ -93,6 +105,9 @@ if __name__ == "__main__":
     voxel = float(sys.argv[3]) if len(sys.argv) > 3 else 0.12
     s, r, z, nt, rho = load(npz)
     phi, axes = field(s, r, z, nt, rho, voxel)
+    if len(sys.argv) > 4:                                   # holes: n,d,r_h
+        n_h, d_h, r_h = sys.argv[4].split(",")
+        phi = add_holes(phi, axes, s, int(n_h), float(d_h), float(r_h))
     m = snap(surface(phi, axes), s)
     m.export(out)
     t, _, _ = thickness(phi, voxel)
