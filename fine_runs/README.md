@@ -57,7 +57,14 @@ cd fine_runs
 ```
 
 It runs a 40-iteration very coarse version of `r01`. That is not converged, so the extract step is expected
-to report *"loose bodies … verification skipped"*. The smoke test only checks that every stage runs.
+to report *"loose bodies … verification skipped"*. It checks that the optimiser and extraction run.
+
+To check that the verification stage (gmsh, P2 solver, buckling) also works on your machine, run the
+reference case in `reference/`. It re-verifies a converged design that is shipped with the package:
+
+```bash
+../.venv/bin/python run_all.py --reference
+```
 
 ## Run
 
@@ -94,7 +101,24 @@ optimiser resumes from its last save (every 5 iterations), and finished stages a
 Symmetry order N is a balance requirement: N-fold symmetry makes the wheel statically balanced. Inside each
 sector the shape is completely free.
 
-## Time and memory (guide)
+## Rim thickness vs process — read this
+
+The rim skin can't be thinner than the process's minimum printable wall. Extraction forces every wall,
+including the skin, to at least `t_min`. A full-width rim at R = 14.1 has m_eq of:
+
+| rim skin | rim m_eq on its own |
+|---|---|
+| 0.7 mm (SLS PA12) | 0.92 g, the floor for r01–r04 |
+| 0.4 mm | 0.54 g |
+| 0.25 mm | 0.35 g |
+
+**r05 (0.4 mm skin) is the run that matches "make the rim really thin"**, but only if your process can
+print 0.4 mm walls. The optimiser thickens the rim inwards from the skin only where the loads need it.
+
+## Time and memory (estimates, not yet measured on the fine grid)
+
+These are extrapolated: the fine grid (h 0.5 with the 0.15 mm rim band, ~220k elements, ~700k DOF) has not
+been run to completion on the development box.
 
 The reference is the 4-core / 15 GB cloud box this was developed on.
 
