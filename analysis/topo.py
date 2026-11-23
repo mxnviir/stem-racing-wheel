@@ -62,6 +62,7 @@ class Setup:
     frac: float = 0.25                       # initial density
     iters: int = 160
     lcs: tuple = ("press", "press_e0", "press_eW", "pinch", "pinch_e0", "lip0", "lipW")
+    lc_scale: dict = field(default_factory=dict)   # optional per-load-case force factor, e.g. {"lip0": 0.25}
 
 
 def _axis(breaks, h):
@@ -295,7 +296,7 @@ class Wheel:
                     w = w * cos2(dth(phi), np.deg2rad(16)) * (r * self.dth)
                     w = w / w.sum() * s.F
                     f[2] += w if lc == "lip0" else -w
-                F.append(f.T.ravel()); names.append(f"{lc}@{np.degrees(phi - np.pi / 2):.0f}")
+                F.append(f.T.ravel() * s.lc_scale.get(lc, 1.0)); names.append(f"{lc}@{np.degrees(phi - np.pi / 2):.0f}")
         self.F = np.column_stack(F)
         self.lc_names = names
 
