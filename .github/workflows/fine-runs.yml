@@ -114,10 +114,20 @@ jobs:
             fi
           }
 
+      - name: Find results directory
+        if: steps.should-run.outputs.skip != 'true'
+        id: results-dir
+        run: |
+          if [ "${{ inputs.smoke }}" = "true" ]; then
+            echo "dir=fine_runs/results/${{ matrix.run }}_smoke" >> "$GITHUB_OUTPUT"
+          else
+            echo "dir=fine_runs/results/${{ matrix.run }}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Check completion
         if: steps.should-run.outputs.skip != 'true'
         run: |
-          SUMMARY="fine_runs/results/${{ matrix.run }}/summary.json"
+          SUMMARY="${{ steps.results-dir.outputs.dir }}/summary.json"
           if [ ! -f "$SUMMARY" ]; then
             echo "::warning::No summary.json produced"
             exit 0
@@ -145,7 +155,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.run }}-results
-          path: fine_runs/results/${{ matrix.run }}/
+          path: ${{ steps.results-dir.outputs.dir }}/
+          if-no-files-found: ignore
           retention-days: 90
           overwrite: true
 
@@ -165,13 +176,16 @@ jobs:
 
       - name: Flatten artifact directories
         run: |
+          mkdir -p fine_runs/results
           cd fine_runs/results
           for d in *-results; do
+            [ -d "$d" ] || continue
             name="${d%-results}"
-            if [ -d "$d" ] && [ "$d" != "$name" ]; then
+            if [ "$d" != "$name" ]; then
               mv "$d" "$name" 2>/dev/null || true
             fi
           done
+          ls -la || true
 
       - uses: actions/setup-python@v5
         with:
