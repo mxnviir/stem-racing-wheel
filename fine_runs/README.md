@@ -101,6 +101,19 @@ optimiser resumes from its last save (every 5 iterations), and finished stages a
 Symmetry order N is a balance requirement: N-fold symmetry makes the wheel statically balanced. Inside each
 sector the shape is completely free.
 
+## Reference result computed here (coarse, `reference/`)
+
+r01's setup on a coarse grid (h 0.9, load angles every 20°, 163 iterations, 24 min on 4 cores). It grew
+**organic, branching spokes** between the hub and the thin rim. See `reference/wheel.png`.
+
+| m_eq (incl. bearings) | mass | full-accuracy check: max stress / allowable | buckling | f1 | min wall |
+|---|---|---|---|---|---|
+| 1.176 g | 2.07 g | **1.38, fails** (press at 10°) | ≥ 5.4 | 813 Hz | 0.78 mm |
+
+It fails at load angles *between* the ones the optimiser saw (it used 0/20/40°; the worst cases are at 10° and 50°).
+The design tuned itself to the sampled angles. The fine runs therefore use a load every ~10° (`n_phi`), plus
+the finer grid. If a fine run still comes out above 1, lower its `sigma_target` (see the end of this file).
+
 ## Rim thickness vs process — read this
 
 The rim skin can't be thinner than the process's minimum printable wall. Extraction forces every wall,
