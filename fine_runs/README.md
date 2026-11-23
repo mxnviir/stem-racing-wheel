@@ -101,18 +101,22 @@ optimiser resumes from its last save (every 5 iterations), and finished stages a
 Symmetry order N is a balance requirement: N-fold symmetry makes the wheel statically balanced. Inside each
 sector the shape is completely free.
 
-## Reference result computed here (coarse, `reference/`)
+## Reference result computed here (coarse, `reference/`): a valid organic wheel
 
-r01's setup on a coarse grid (h 0.9, load angles every 20°, 163 iterations, 24 min on 4 cores). It grew
-**organic, branching spokes** between the hub and the thin rim. See `reference/wheel.png`.
+r01's setup on a coarse optimisation grid (h 0.9 mm, loads every 10°). The optimiser grew **organic,
+branching spokes** between the hub and the thin rim (`reference/wheel.png`). Printable mesh:
+`reference/organic_wheel_r01.stl`. Full-accuracy check of that STL:
 
-| m_eq (incl. bearings) | mass | full-accuracy check: max stress / allowable | buckling | f1 | min wall |
+| m_eq (incl. bearings) | mass (incl. bearings) | max stress / allowable | buckling | f1 | min wall |
 |---|---|---|---|---|---|
-| 1.176 g | 2.07 g | **1.38, fails** (press at 10°) | ≥ 5.4 | 813 Hz | 0.78 mm |
+| **1.215 g** (parametric drum: 1.370 g) | 2.17 g | **0.72** (0.73 at h 1.0, 0.72 at h 0.8) | ≥ 6.1 | 1015 Hz | no ray < 0.70 mm (60k rays) |
 
-It fails at load angles *between* the ones the optimiser saw (it used 0/20/40°; the worst cases are at 10° and 50°).
-The design tuned itself to the sampled angles. The fine runs therefore use a load every ~10° (`n_phi`), plus
-the finer grid. If a fine run still comes out above 1, lower its `sigma_target` (see the end of this file).
+How it got there:
+- **Load spacing.** A first attempt with loads every 20° failed (1.38) at the angles between the sampled ones.
+- **Stress target.** With loads every 10°, the coarse grid under-read the real peak by about 5 %, so the
+  stress target was lowered in two continuations, 16.8 → 15.5 → 14.5 MPa, until the full check passed.
+
+The fine runs use a finer grid and loads every ~10° from the start; if one still fails, lower `sigma_target`.
 
 ## Rim thickness vs process — read this
 
