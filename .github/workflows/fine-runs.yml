@@ -1,0 +1,219 @@
+name: Fine runs — topology optimisation
+
+on:
+  workflow_dispatch:
+    inputs:
+      runs:
+        description: "Space-separated run names (blank = all)"
+        required: false
+        default: ""
+      smoke:
+        description: "Smoke test only (quick install check)"
+        type: boolean
+        default: false
+      no_verify:
+        description: "Skip the verification stage"
+        type: boolean
+        default: false
+
+jobs:
+  fine-run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        run:
+          - r01_N6_skin0.7
+          - r02_N5_skin0.7
+          - r03_N4_skin0.7
+          - r04_N8_skin0.7
+          - r05_N6_skin0.4
+          - r06_N6_skin0.7_h0.4
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Runner info
+        run: |
+          echo "CPUs: $(nproc)"
+          free -g
+          df -h /
+          uname -m
+
+      - name: Set up swap (extra 8 GB)
+        run: |
+          sudo fallocate -l 8G /mnt/swapfile
+          sudo chmod 600 /mnt/swapfile
+          sudo mkswap /mnt/swapfile
+          sudo swapon /mnt/swapfile
+          free -g
+
+      - name: Install OpenGL libraries for gmsh
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libglu1-mesa libxcursor1 libxft2 libxinerama1 libxrender1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: pip install -r fine_runs/requirements.txt
+
+      - name: Check pypardiso loads
+        run: |
+          python -c "
+          try:
+              import pypardiso; print('pypardiso OK')
+          except Exception as e:
+              print(f'pypardiso unavailable: {e} (will fall back to SuperLU)')
+          "
+
+      - name: Download checkpoint (if resuming)
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.run }}-results
+          path: fine_runs/results/${{ matrix.run }}
+        continue-on-error: true
+
+      - name: Determine if this run should execute
+        id: should-run
+        run: |
+          INPUT_RUNS="${{ inputs.runs }}"
+          RUN="${{ matrix.run }}"
+          SMOKE="${{ inputs.smoke }}"
+          if [ "$SMOKE" = "true" ] && [ "$RUN" != "r01_N6_skin0.7" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Smoke test: only r01 runs"
+          elif [ -n "$INPUT_RUNS" ] && ! echo "$INPUT_RUNS" | grep -qw "${RUN%%_*}"; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Run not in requested list: $INPUT_RUNS"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run optimisation
+        if: steps.should-run.outputs.skip != 'true'
+        working-directory: fine_runs
+        run: |
+          ARGS="${{ matrix.run }}"
+          FLAGS=""
+          if [ "${{ inputs.smoke }}" = "true" ]; then
+            FLAGS="--smoke"
+          fi
+          if [ "${{ inputs.no_verify }}" = "true" ]; then
+            FLAGS="$FLAGS --no-verify"
+          fi
+          timeout 320m python run_all.py $ARGS $FLAGS 2>&1 | tee /tmp/run.log || {
+            EXIT=$?
+            if [ $EXIT -eq 124 ]; then
+              echo "::warning::Run hit the 320-minute timeout — partial results will be uploaded for resume"
+            else
+              echo "::error::Run exited with code $EXIT"
+            fi
+          }
+
+      - name: Find results directory
+        if: steps.should-run.outputs.skip != 'true'
+        id: results-dir
+        run: |
+          if [ "${{ inputs.smoke }}" = "true" ]; then
+            echo "dir=fine_runs/results/${{ matrix.run }}_smoke" >> "$GITHUB_OUTPUT"
+          else
+            echo "dir=fine_runs/results/${{ matrix.run }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check completion
+        if: steps.should-run.outputs.skip != 'true'
+        run: |
+          SUMMARY="${{ steps.results-dir.outputs.dir }}/summary.json"
+          if [ ! -f "$SUMMARY" ]; then
+            echo "::warning::No summary.json produced"
+            exit 0
+          fi
+          python -c "
+          import json, sys
+          s = json.load(open('$SUMMARY'))
+          stages = []
+          if 'optimise' in s: stages.append('optimise')
+          if 'extract' in s: stages.append('extract')
+          if 'verify' in s: stages.append('verify')
+          print(f'Completed stages: {stages}')
+          v = s.get('verify', {})
+          if 'invalid' in v:
+              print(f'::warning::Design invalid: {v[\"invalid\"]}')
+              sys.exit(1)
+          if v.get('q_max', 0) > 1.0:
+              print(f'::warning::Stress ratio {v[\"q_max\"]:.2f} > 1.0 — may need sigma_target adjustment')
+          if not stages:
+              print('::warning::No stages completed')
+          "
+
+      - name: Upload results
+        if: always() && steps.should-run.outputs.skip != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.run }}-results
+          path: ${{ steps.results-dir.outputs.dir }}/
+          if-no-files-found: ignore
+          retention-days: 90
+          overwrite: true
+
+  collect:
+    needs: fine-run
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all results
+        uses: actions/download-artifact@v4
+        with:
+          path: fine_runs/results/
+          pattern: "*-results"
+          merge-multiple: false
+
+      - name: Flatten artifact directories
+        run: |
+          mkdir -p fine_runs/results
+          cd fine_runs/results
+          for d in *-results; do
+            [ -d "$d" ] || continue
+            name="${d%-results}"
+            if [ "$d" != "$name" ]; then
+              mv "$d" "$name" 2>/dev/null || true
+            fi
+          done
+          ls -la || true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build summary table
+        run: |
+          pip install -q numpy
+          cd fine_runs
+          python -c "
+          import os, json
+          results = 'results'
+          rows = []
+          for n in sorted(os.listdir(results)):
+              f = os.path.join(results, n, 'summary.json')
+              if not os.path.isfile(f): continue
+              s = json.load(open(f))
+              v = s.get('verify', {}); e = s.get('extract', {}); o = s.get('optimise', {})
+              status = 'complete' if 'verify' in s and 'invalid' not in v else ('partial' if 'optimise' in s else 'none')
+              rows.append(f'| {n} | {o.get(\"iterations\", \"-\")} | {v.get(\"m_eq_g\", \"-\")} | {v.get(\"q_max\", \"-\")} | {status} |')
+          print('| Run | Iters | m_eq (g) | Stress ratio | Status |')
+          print('|-----|-------|----------|--------------|--------|')
+          for r in rows: print(r)
+          " | tee "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload combined results
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-fine-run-results
+          path: fine_runs/results/
+          retention-days: 90
