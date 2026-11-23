@@ -1,9 +1,0 @@
-[06:26:07] === ref_coarse_r01: coarse reference of r01 computed on the 4-core cloud box | Linux-6.18.44-fc-v726-x86_64-with-glibc2.39, 4 cpus
-[06:26:10] grid: nr 23 nt 96 nz 23 -> 46464 elements, 152352 dof, 7744 variables, 6 load cases; setup 3s; stress target 18.9 MPa (vM)
-[06:26:19] it   0 beta    1 m_eq 3.058 g (design 2.131) mass 5.435 g | max vM   2.1 MPa (press@0, r 12.8 z 0.4) P-norm   2.1 | grey 0.991 change 0.030 [9s]
-[06:26:28] it   1 beta    1 m_eq 2.933 g (design 2.006) mass 5.169 g | max vM   2.5 MPa (press@0, r 12.8 z 0.4) P-norm   2.5 | grey 0.990 change 0.030 [9s]
-[06:26:37] it   2 beta    1 m_eq 2.808 g (design 1.882) mass 4.903 g | max vM   2.9 MPa (press@0, r 12.8 z 0.4) P-norm   2.9 | grey 0.981 change 0.030 [9s]
-[06:26:45] it   3 beta    1 m_eq 2.684 g (design 1.757) mass 4.638 g | max vM   3.3 MPa (press@0, r 12.8 z 0.4) P-norm   3.4 | grey 0.964 change 0.030 [8s]
-[06:26:54] it   4 beta    1 m_eq 2.560 g (design 1.633) mass 4.374 g | max vM   4.0 MPa (press@0, r 12.8 z 0.4) P-norm   4.0 | grey 0.939 change 0.030 [9s]
-[06:27:03] it   5 beta    1 m_eq 2.437 g (design 1.510) mass 4.111 g | max vM   4.7 MPa (press@0, r 12.8 z 0.4) P-norm   4.8 | grey 0.907 change 0.030 [9s]
-[06:27:12] it   6 beta    1 m_eq 2.314 g (design 1.388) mass 3.851 g | max vM   5.7 MPa (press@0, r 12.5 z 0.4) P-norm   5.8 | grey 0.867 change 0.030 [9s]

@@ -6,3 +6,4 @@ analysis/*.log
 analysis/*.npz
 analysis/*_coarse*
 analysis/*.stl
+fine_runs/results/
