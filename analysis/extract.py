@@ -52,10 +52,14 @@ def surface(phi, axes, smooth=10):
     v, f, _, _ = marching_cubes(phi, 0.0, spacing=sp)
     v += np.array([a[0] for a in axes])
     m = trimesh.Trimesh(v, f, process=True)
+    # keep the outer skin AND the walls of enclosed internal cavities; drop only small floating debris
     parts = m.split(only_watertight=False)
-    m = max(parts, key=lambda p: abs(p.volume) if p.is_watertight else 0)
+    big = max(abs(p.volume) for p in parts)
+    keep = [p for p in parts if abs(p.volume) > 1e-3 * big or len(p.faces) > 2000]
+    m = trimesh.util.concatenate(keep)
     if m.volume < 0:
         m.invert()
+    m.metadata["n_shells"] = len(keep)
     if smooth:
         trimesh.smoothing.filter_taubin(m, lamb=0.5, nu=-0.53, iterations=smooth)
     return m
@@ -92,6 +96,6 @@ if __name__ == "__main__":
     m = snap(surface(phi, axes), s)
     m.export(out)
     t, _, _ = thickness(phi, voxel)
-    print(f"{out}: {len(m.faces)} triangles, watertight {m.is_watertight}, volume {m.volume:.1f} mm^3, "
+    print(f"{out}: {len(m.faces)} triangles, {m.metadata['n_shells']} shells (>1 = enclosed cavities), watertight {m.is_watertight}, volume {m.volume:.1f} mm^3, "
           f"mass {m.volume * s['rho'] * 1e-6:.3f} g; wall thickness 1st/5th percentile {np.percentile(t, 1):.2f}/"
           f"{np.percentile(t, 5):.2f} mm, min {t.min():.2f} mm")

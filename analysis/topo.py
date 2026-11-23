@@ -155,7 +155,25 @@ class Wheel:
             Ba[3, 1::3] = Gp[:, 2]; Ba[3, 2::3] = Gp[:, 1]; Ba[4, 0::3] = Gp[:, 2]; Ba[4, 2::3] = Gp[:, 0]
             Ba[5, 0::3] = Gp[:, 1]; Ba[5, 1::3] = Gp[:, 0]
             Kuu += B.T @ C @ B * detJ; Kua += B.T @ C @ Ba * detJ; Kaa += Ba.T @ C @ Ba * detJ
-        return Kuu - Kua @ np.linalg.solve(Kaa, Kua.T)
+        Ke = Kuu - Kua @ np.linalg.solve(Kaa, Kua.T)
+        # stress recovery at the 8 corners (surface points): eps = (B - Ba Kaa^-1 Kau) u, sigma = C eps
+        A = np.linalg.solve(Kaa, Kua.T)                                 # alpha = -A u
+        Sr = np.zeros((8, 6, 24))
+        for a in range(8):
+            p = xi[a]
+            d = dN(p); J = d.T @ Xe; detJ = np.linalg.det(J); G = d @ np.linalg.inv(J).T
+            B = np.zeros((6, 24))
+            B[0, 0::3] = G[:, 0]; B[1, 1::3] = G[:, 1]; B[2, 2::3] = G[:, 2]
+            B[3, 1::3] = G[:, 2]; B[3, 2::3] = G[:, 1]; B[4, 0::3] = G[:, 2]; B[4, 2::3] = G[:, 0]
+            B[5, 0::3] = G[:, 1]; B[5, 1::3] = G[:, 0]
+            dP = np.diag([-2 * p[0], -2 * p[1], -2 * p[2]])
+            Gp = (dP @ J0i.T) * (detJ0 / detJ)
+            Ba = np.zeros((6, 9))
+            Ba[0, 0::3] = Gp[:, 0]; Ba[1, 1::3] = Gp[:, 1]; Ba[2, 2::3] = Gp[:, 2]
+            Ba[3, 1::3] = Gp[:, 2]; Ba[3, 2::3] = Gp[:, 1]; Ba[4, 0::3] = Gp[:, 2]; Ba[4, 2::3] = Gp[:, 0]
+            Ba[5, 0::3] = Gp[:, 1]; Ba[5, 1::3] = Gp[:, 0]
+            Sr[a] = C @ (B - Ba @ A)
+        return Ke, Sr
 
     def _element_matrices(self):
         """Ke in the element's local frame (element centred at theta = 0) for each (ir, dz) class."""
@@ -164,14 +182,14 @@ class Wheel:
         self.dz_classes, dzc = np.unique(dz, return_inverse=True)
         self.cls = self.ei * len(self.dz_classes) + dzc[self.ek]
         ncls = (len(r) - 1) * len(self.dz_classes)
-        self.Ke0 = np.zeros((ncls, 24, 24))
+        self.Ke0 = np.zeros((ncls, 24, 24)); self.Sr = np.zeros((ncls, 8, 6, 24))
         for i in range(len(r) - 1):
             for k, h in enumerate(self.dz_classes):
                 pts = []
                 for (a, b, c) in [(0, -1, 0), (1, -1, 0), (1, 1, 0), (0, 1, 0), (0, -1, 1), (1, -1, 1), (1, 1, 1), (0, 1, 1)]:
                     rr = r[i + a]; tt = b * dt / 2
                     pts.append((rr * np.cos(tt), rr * np.sin(tt), c * h))
-                self.Ke0[i * len(self.dz_classes) + k] = self._ke(np.array(pts))
+                self.Ke0[i * len(self.dz_classes) + k], self.Sr[i * len(self.dz_classes) + k] = self._ke(np.array(pts))
 
     # ---------- assembly ----------
     def _pattern(self):
@@ -282,17 +300,74 @@ class Wheel:
         self.lc_names = names
 
     # ---------- physics ----------
-    def solve(self, Ee):
+    def solve(self, Ee, keep=False, F=None):
         import pypardiso
+        F = self.F if F is None else F
         K = self.K(Ee)
         Kf = K[self.free][:, self.free]
         Kf = sp.triu(Kf, format="csr"); Kf.sort_indices()
         solver = pypardiso.PyPardisoSolver(mtype=2)
         solver.factorize(Kf)
-        U = np.zeros((self.ndofs, self.F.shape[1]))
-        U[self.free] = solver.solve(Kf, np.ascontiguousarray(self.F[self.free])).reshape(len(self.free), -1)
+        U = np.zeros((self.ndofs, F.shape[1]))
+        U[self.free] = solver.solve(Kf, np.ascontiguousarray(F[self.free])).reshape(len(self.free), -1)
+        if keep:
+            def again(B):
+                X = np.zeros_like(B)
+                X[self.free] = solver.solve(Kf, np.ascontiguousarray(B[self.free])).reshape(len(self.free), -1)
+                solver.free_memory(everything=True)
+                return X
+            return U, again
         solver.free_memory(everything=True)
         return U
+
+    # ---------- surface stresses (solid-material stress at the 8 corners of every element) ----------
+    def _local(self, U, idx):
+        ue = U[self.edofs[idx]].reshape(len(idx), 8, 3, -1)
+        return np.einsum('eji,enjl->enil', self.Rz[idx], ue).reshape(len(idx), 24, -1)
+
+    def corner_vm(self, U):
+        """von Mises (solid-material, i.e. the stress the printed part sees) at the element corners:
+        (ne, 8, nlc), plus max principal for reporting."""
+        vm = np.zeros((self.ne, 8, U.shape[1])); s1 = np.zeros_like(vm)
+        for k in range(len(self.Ke0)):
+            idx = np.nonzero(self.cls == k)[0]
+            if len(idx) == 0:
+                continue
+            S = np.einsum('aib,ebl->eail', self.Sr[k], self._local(U, idx)) * self.s.E     # (n, 8, 6, nlc)
+            sx, sy, sz, tyz, txz, txy = (S[:, :, i] for i in range(6))
+            vm[idx] = np.sqrt(np.maximum(0.5 * ((sx - sy)**2 + (sy - sz)**2 + (sz - sx)**2) + 3 * (tyz**2 + txz**2 + txy**2), 1e-30))
+            T = np.stack([np.stack([sx, txy, txz], -1), np.stack([txy, sy, tyz], -1), np.stack([txz, tyz, sz], -1)], -2)
+            s1[idx] = np.linalg.eigvalsh(T)[..., -1]
+        return vm, s1
+
+    def vm_adjoint_rhs(self, U, coef):
+        """sum over elements/corners/load cases of coef * d vM / d u  -> (ndofs, nlc); coef (ne, 8, nlc)."""
+        out = np.zeros_like(U)
+        V = np.array([[1, -.5, -.5, 0, 0, 0], [-.5, 1, -.5, 0, 0, 0], [-.5, -.5, 1, 0, 0, 0],
+                      [0, 0, 0, 3, 0, 0], [0, 0, 0, 0, 3, 0], [0, 0, 0, 0, 0, 3]], float)
+        for k in range(len(self.Ke0)):
+            idx = np.nonzero(self.cls == k)[0]
+            if len(idx) == 0:
+                continue
+            S = np.einsum('aib,ebl->eail', self.Sr[k], self._local(U, idx)) * self.s.E
+            VS = np.einsum('ij,eajl->eail', V, S)
+            vm = np.sqrt(np.maximum(np.einsum('eail,eail->eal', S, VS), 1e-30))
+            g = VS * (coef[idx] / vm)[:, :, None, :]                     # d/dsigma
+            gl = np.einsum('eail,aib->ebl', g, self.Sr[k]) * self.s.E    # d/du_local (n, 24, nlc)
+            gl = gl.reshape(len(idx), 8, 3, -1)
+            gg = np.einsum('eij,enjl->enil', self.Rz[idx], gl).reshape(len(idx), 24, -1)
+            np.add.at(out, self.edofs[idx], gg)
+        return out
+
+    def element_cross(self, A, U):
+        """a_e^T Ke0 u_e (unit E) per element and load case."""
+        out = np.zeros((self.ne, U.shape[1]))
+        for k in range(len(self.Ke0)):
+            idx = np.nonzero(self.cls == k)[0]
+            if len(idx) == 0:
+                continue
+            out[idx] = np.einsum('eal,ab,ebl->el', self._local(A, idx), self.Ke0[k], self._local(U, idx))
+        return out * self.s.E
 
     def element_energy(self, U):
         """u_e^T Ke0 u_e (unit E) per element and load case: (ne, nlc)."""
@@ -398,7 +473,121 @@ def optimise(s: Setup, out="topo_result.npz", log=print):
     return w, x, pb, hist
 
 
+def mma_step(x, df0, g, dg, xmin, xmax, L, U, x1, x2, it, move=0.1):
+    """One MMA step (Svanberg 1987) for min f0(x) s.t. g(x) <= 0 with a single constraint; the convex
+    separable subproblem is solved through its 1-D dual (bisection on the multiplier)."""
+    rng = xmax - xmin
+    if it < 2:
+        L = x - 0.2 * rng; U = x + 0.2 * rng
+    else:
+        sgn = (x - x1) * (x1 - x2)
+        gam = np.where(sgn > 0, 1.2, np.where(sgn < 0, 0.7, 1.0))
+        L = x - gam * (x1 - L); U = x + gam * (U - x1)
+        L = np.clip(L, x - 10 * rng, x - 0.01 * rng); U = np.clip(U, x + 0.01 * rng, x + 10 * rng)
+    alpha = np.maximum.reduce([xmin, L + 0.1 * (x - L), x - move])
+    beta = np.minimum.reduce([xmax, U - 0.1 * (U - x), x + move])
+    ux, xl = U - x, x - L
+    eps = 1e-5 / rng
+    p0 = ux**2 * (1.001 * np.maximum(df0, 0) + 0.001 * np.maximum(-df0, 0) + eps)
+    q0 = xl**2 * (0.001 * np.maximum(df0, 0) + 1.001 * np.maximum(-df0, 0) + eps)
+    p1 = ux**2 * (1.001 * np.maximum(dg, 0) + 0.001 * np.maximum(-dg, 0) + eps)
+    q1 = xl**2 * (0.001 * np.maximum(dg, 0) + 1.001 * np.maximum(-dg, 0) + eps)
+    b = (p1 / ux + q1 / xl).sum() - g
+    def xof(lam):
+        P, Q = p0 + lam * p1, q0 + lam * q1
+        sp_, sq = np.sqrt(P), np.sqrt(Q)
+        return np.clip((sp_ * L + sq * U) / (sp_ + sq), alpha, beta)
+    def gof(lam):
+        xx = xof(lam)
+        return (p1 / (U - xx) + q1 / (xx - L)).sum() - b
+    lo, hi = 0.0, 1.0
+    if gof(0.0) <= 0:
+        lam = 0.0
+    else:
+        while gof(hi) > 0 and hi < 1e12:
+            hi *= 10
+        for _ in range(80):
+            mid = 0.5 * (lo + hi)
+            lo, hi = (mid, hi) if gof(mid) > 0 else (lo, mid)
+        lam = hi
+    return xof(lam), L, U
+
+
+def optimise_inertia(s: Setup, out="topo_inertia.npz", log=print, sigma_target=None, P=10.0, q_relax=0.5):
+    """Minimum rotational inertia subject to the stress limit under all load cases (and the minimum
+    length scale). Constraint: adaptive-normalised P-norm of the relaxed surface von Mises stress of the
+    eroded design over all elements, corners and load cases <= sigma_target."""
+    t0 = time.time()
+    w = Wheel(s)
+    allow = 42.0 / 2.0
+    sigma_target = sigma_target or 0.9 * allow
+    log(f"grid: nr {w.nr} nt {w.nt} nz {w.nz} -> {w.ne} elements, {w.ndofs} dof, {w.nvar} variables, "
+        f"{len(w.lc_names)} load cases; setup {time.time()-t0:.0f}s; stress target {sigma_target:.1f} MPa (vM)")
+    wI = w.inertia_w()
+    I_fixed = (wI * w.fixed).sum()
+    I_full = (wI * w.design).sum()
+    # points excluded from the stress measure: within 0.5 mm of the clamped bearing seat (BC singularity)
+    excl = (w.rc < s.r_bore + 0.5) & np.any([(w.zc > a - 0.5) & (w.zc < b + 0.5) for a, b in s.seats], axis=0)
+    x = np.full(w.nvar, 0.5)
+    xmin, xmax = np.zeros(w.nvar), np.ones(w.nvar)
+    L = U_ = x1 = x2 = None
+    beta, cn, hist = 1.0, 1.0, []
+    for it in range(s.iters):
+        if it > 0 and it % 25 == 0 and beta < 16:
+            beta *= 2
+        pe, dpe, pb, dpb = w.densities(x, beta)
+        Ee = s.Emin + pe**s.simp * (1 - s.Emin)
+        t1 = time.time()
+        Uu, again = w.solve(Ee, keep=True)
+        vm, s1 = w.corner_vm(Uu)                                          # solid stress (ne, 8, nlc)
+        pq = np.maximum(pe, 1e-3)
+        rel = (pq**q_relax)[:, None, None] * vm
+        rel[excl] = 0.0
+        true_max = float(rel.max())
+        pn = float(((rel / allow)**P).sum()**(1 / P)) * allow
+        cn = 0.5 * cn + 0.5 * (true_max / pn) if it > 0 else true_max / pn  # adaptive normalisation
+        G = cn * pn
+        # sensitivities of G: d pn/d rel = (rel/pn)^(P-1)
+        dpn = np.where(rel > 0, (rel / pn)**(P - 1), 0.0) * cn
+        coef = dpn * (pq**q_relax)[:, None, None]                         # d G / d vm (explicit u-dependence)
+        coef[excl] = 0.0
+        lam = again(w.vm_adjoint_rhs(Uu, coef))                          # K lambda = dG/du
+        dG_dE = -w.element_cross(lam, Uu).sum(1)                          # implicit via K(E)
+        dG_dpe = dG_dE * s.simp * pe**(s.simp - 1) * (1 - s.Emin)
+        dG_dpe += (dpn * vm).sum((1, 2)) * q_relax * pq**(q_relax - 1) * (~excl) * (pe > 1e-3)
+        gG = w.back(dG_dpe, dpe) / sigma_target
+        Iw = (pb * wI * w.design).sum()
+        gI = w.back(wI * w.design, dpb) / I_full
+        g = G / sigma_target - 1.0
+        xn, L, U_ = mma_step(x, gI, g, gG, xmin, xmax, L, U_, x1 if x1 is not None else x,
+                             x2 if x2 is not None else x, it, move=0.03 if beta < 8 else 0.02)
+        x2, x1 = x1, x.copy()
+        change = np.abs(xn - x).max(); x = xn
+        m_b, I_b = w.mass_props(pb)
+        grey = 4 * (pb * (1 - pb) * w.vol * w.design).sum() / (w.vol * w.design).sum()
+        jw = np.unravel_index(np.argmax(rel), rel.shape)
+        hist.append(dict(it=it, beta=beta, meq=(I_b) / s.R**2, mass=m_b, smax=true_max, G=G, grey=grey,
+                         worst=w.lc_names[jw[2]]))
+        log(f"it {it:3d} beta {beta:4.0f} m_eq {I_b / s.R**2:.3f} g (design {Iw / s.R**2:.3f}) mass {m_b:.3f} g | "
+            f"max vM {true_max:5.1f} MPa ({w.lc_names[jw[2]]}, r {w.rc[jw[0]]:.1f} z {w.zc[jw[0]]:.1f}) "
+            f"P-norm {G:5.1f} | grey {grey:.3f} change {change:.3f} [{time.time()-t1:.0f}s]")
+        if beta >= 16 and change < 0.01 and it > 80:
+            break
+        if it % 10 == 0:
+            np.savez_compressed(out, x=x, rho=pb, rho_e=pe, beta=beta, setup=json.dumps(asdict(s), default=list),
+                                r=w.r, z=w.z, nt=w.nt, hist=json.dumps(hist))
+    pe, dpe, pb, dpb = w.densities(x, beta)
+    np.savez_compressed(out, x=x, rho=pb, rho_e=pe, beta=beta, setup=json.dumps(asdict(s), default=list),
+                        r=w.r, z=w.z, nt=w.nt, hist=json.dumps(hist))
+    return w, x, pb, hist
+
+
 if __name__ == "__main__":
     kw = json.loads(sys.argv[1]) if len(sys.argv) > 1 else {}
-    out = sys.argv[2] if len(sys.argv) > 2 else "topo_result.npz"
-    optimise(Setup(**kw), out)
+    out = sys.argv[2] if len(sys.argv) > 2 else "topo_inertia.npz"
+    mode = kw.pop("mode", "inertia")
+    st = kw.pop("sigma_target", None)
+    if mode == "compliance":
+        optimise(Setup(**kw), out)
+    else:
+        optimise_inertia(Setup(**kw), out, sigma_target=st)
