@@ -5,7 +5,12 @@ Research code for designing the lightest robust wheel for a STEM Racing Professi
 SLS PA12, FDM ABS and carbon fibre. The analysis is a scripted, reproducible open-source FEA
 pipeline. Final designs are meant to be cross-checked independently in Ansys Student.
 
-> **Status (2026-11-22): stage 5 done for SLS PA12.** A general 3D pipeline (spokes, variable rim thickness,
+> **Status (2026-11-23): organic topology-optimisation engine built** (`analysis/topo.py`, `extract.py`,
+> `verify_organic.py`): minimum rotational inertia subject to the stress limit, between a fixed bearing hub and a
+> thin rim skin, any shape in between. The fine runs are packaged in [`fine_runs/`](fine_runs/README.md) to run on a
+> bigger PC. Earlier parametric work below is kept for reference.
+>
+> **Previous status (2026-11-22): stage 5 done for SLS PA12.** A general 3D pipeline (spokes, variable rim thickness,
 > fillets, buckling) is built and verified, and the SLS PA12 rear wheel is sized, converged and exported
 > (`analysis/pa12_final.step`): a closed drum with tapered faces and powder-escape holes, **m_eq 1.37 g, mass 2.83 g**.
 > See [§8](#8-3d-pipeline-and-the-sls-pa12-wheel) and [`DESIGN_LOG.md`](DESIGN_LOG.md). The hex-pipeline re-sizing of the

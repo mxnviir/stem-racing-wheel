@@ -58,24 +58,44 @@ def add_holes(phi, axes, s, n, d, r_h, side="W", depth=4.0):
 
 
 def enforce_min_thickness(phi, axes, s, voxel, t_min):
-    """Thicken every wall thinner than t_min to t_min (and leave thicker walls alone): signed distance
-    of the solid plus a local offset (t_min - T)/2, T = thickness of the nearest medial point; then
-    clipped back to the wheel envelope (so walls grow inwards from the end planes / rim)."""
+    """Every wall >= t_min: union of the solid with balls of diameter t_min centred on its medial
+    (centre) surface. Thick walls already contain those balls, so only thin walls grow; the result is
+    clipped back to the wheel envelope (walls grow inwards from the end planes and the rim)."""
     solid = phi > 0
-    din = ndimage.distance_transform_edt(solid) * voxel
-    dout = ndimage.distance_transform_edt(~solid) * voxel
-    sd = np.where(solid, din - 0.5 * voxel, -(dout - 0.5 * voxel))
+    din = ndimage.distance_transform_edt(solid)
     mx = ndimage.maximum_filter(din, size=3)
     ridge = solid & (din >= mx - 1e-9) & (din > 0)
-    T = np.zeros_like(din); T[ridge] = 2 * din[ridge]
-    _, ind = ndimage.distance_transform_edt(~ridge, return_indices=True)
-    Tn = T[tuple(ind)]
-    off = np.clip((t_min - Tn) / 2, 0, None) * 1.1
-    phi2 = sd + off
+    d_ridge = ndimage.distance_transform_edt(~ridge).astype(np.float32) * voxel
+    phi2 = np.maximum(phi, (t_min / 2 + voxel) - d_ridge)          # + 1 voxel: smoothing/voxel margin
     xs, ys, zs = axes
     X, Y, Z = np.meshgrid(xs, ys, zs, indexing="ij")
     rr = np.hypot(X, Y)
     return np.minimum.reduce([phi2, s["R"] - rr, rr - s["r_bore"], Z, s["W"] - Z])
+
+
+def cavity_holes(phi, axes, s, n=2, d=3.0):
+    """Find enclosed cavities (void not connected to the outside) and drill n axial powder holes of
+    diameter d from the inner face (z = W) to each cavity, at the cavity's radius. Returns (phi, info)."""
+    xs, ys, zs = axes
+    X, Y, Z = np.meshgrid(xs, ys, zs, indexing="ij")
+    rr = np.hypot(X, Y)
+    inside = (rr < s["R"]) & (rr > s["r_bore"]) & (Z > 0) & (Z < s["W"])
+    void = (phi <= 0) & inside
+    lab, nlab = ndimage.label(void)
+    outer = set(np.unique(lab[~ndimage.binary_erosion(inside, iterations=1) & void]).tolist()) - {0}
+    info = []
+    for k in range(1, nlab + 1):
+        if k in outer:
+            continue
+        cav = lab == k
+        if cav.sum() < 50:
+            continue
+        r_c = float(np.median(rr[cav]))
+        ztop = float(Z[cav & (np.abs(rr - r_c) < 0.5)].max()) if (cav & (np.abs(rr - r_c) < 0.5)).any() else float(Z[cav].max())
+        depth = s["W"] - ztop + 0.6
+        phi = add_holes(phi, axes, s, n, d, r_c, depth=depth)
+        info.append(dict(r=round(r_c, 2), depth=round(depth, 2), voxels=int(cav.sum())))
+    return phi, info
 
 
 def surface(phi, axes, smooth=10):
@@ -87,12 +107,18 @@ def surface(phi, axes, smooth=10):
     m = trimesh.Trimesh(v, f, process=True)
     # keep the outer skin AND the walls of enclosed internal cavities; drop only small floating debris
     parts = m.split(only_watertight=False)
-    big = max(abs(p.volume) for p in parts)
-    keep = [p for p in parts if abs(p.volume) > 1e-3 * big or len(p.faces) > 2000]
-    m = trimesh.util.concatenate(keep)
+    main = max(parts, key=lambda p: abs(p.volume))
+    sgn = np.sign(main.volume)
+    cav = [p for p in parts if p is not main and np.sign(p.volume) != sgn and abs(p.volume) > 0.05]
+    flo = [p for p in parts if p is not main and np.sign(p.volume) == sgn]
+    big_flo = [p for p in flo if abs(p.volume) > 0.02 * abs(main.volume)]   # loose bodies worth reporting
+    m = trimesh.util.concatenate([main] + cav + big_flo)
     if m.volume < 0:
         m.invert()
-    m.metadata["n_shells"] = len(keep)
+    m.metadata["n_shells"] = 1 + len(cav) + len(big_flo)
+    m.metadata["n_cavities"] = len(cav)
+    m.metadata["n_loose"] = len(big_flo)
+    m.metadata["dropped_debris_mm3"] = float(sum(abs(p.volume) for p in flo if p not in big_flo))
     if smooth:
         trimesh.smoothing.filter_taubin(m, lamb=0.5, nu=-0.53, iterations=smooth)
     return m
@@ -122,14 +148,16 @@ def thickness(phi, voxel):
 
 
 def ray_thickness(m, n=30000, seed=0):
-    import trimesh
     """Wall thickness at random surface points: distance along the inward normal to the opposite wall."""
+    import trimesh
     np.random.seed(seed)
     pts, fi = trimesh.sample.sample_surface(m, n)
     nrm = m.face_normals[fi]
-    loc, idx_ray, _ = m.ray.intersects_location(pts - 1e-4 * nrm, -nrm, multiple_hits=False)
     t = np.full(n, np.nan)
-    t[idx_ray] = np.linalg.norm(loc - pts[idx_ray], axis=1)
+    for a in range(0, n, 500):                    # chunks: candidate ray/triangle pairs grow with ray count
+        o, d = pts[a:a + 500] - 1e-4 * nrm[a:a + 500], -nrm[a:a + 500]
+        loc, idx_ray, _ = m.ray.intersects_location(o, d, multiple_hits=False)
+        t[a + idx_ray] = np.linalg.norm(loc - pts[a + idx_ray], axis=1)
     return t, pts
 
 
@@ -138,12 +166,12 @@ if __name__ == "__main__":
     voxel = float(sys.argv[3]) if len(sys.argv) > 3 else 0.12
     s, r, z, nt, rho = load(npz)
     phi, axes = field(s, r, z, nt, rho, voxel)
-    if len(sys.argv) > 4:                                   # holes: n,d,r_h
-        n_h, d_h, r_h = sys.argv[4].split(",")
-        phi = add_holes(phi, axes, s, int(n_h), float(d_h), float(r_h))
     t_min = float(sys.argv[5]) if len(sys.argv) > 5 else 0.7
     if t_min > 0:
-        phi = enforce_min_thickness(phi, axes, s, voxel, t_min + voxel)
+        phi = enforce_min_thickness(phi, axes, s, voxel, t_min)
+    if len(sys.argv) > 4 and sys.argv[4] not in ("", "0", "none"):   # holes n,d,r_h (cut after thickening)
+        n_h, d_h, r_h = sys.argv[4].split(",")
+        phi = add_holes(phi, axes, s, int(n_h), float(d_h), float(r_h))
     m = snap(surface(phi, axes), s)
     m.export(out)
     t, pts = ray_thickness(m)

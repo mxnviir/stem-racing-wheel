@@ -1,0 +1,13 @@
+# fine_runs: topology optimisation + extraction + verification
+numpy==2.5.5
+scipy==1.18.1
+scikit-fem==12.0.2
+pypardiso==0.4.7        # MKL PARDISO (x86 Windows/Linux); Apple Silicon falls back to SciPy
+mkl==2026.2.1
+gmsh==4.15.2
+matplotlib==3.11.2
+scikit-image==0.25.2
+trimesh==4.6.8
+rtree==1.4.0
+shapely==2.1.1
+fast-simplification==0.1.11

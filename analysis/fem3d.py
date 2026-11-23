@@ -180,13 +180,19 @@ class Model3D:
         return np.concatenate([3 * nodes + c for c in comps]) if len(nodes) else np.zeros(0, int)
 
     def solve(self, K, f, D):
-        import pypardiso
+        try:
+            import pypardiso
+        except ImportError:                       # no MKL (e.g. Apple Silicon): SciPy direct solver
+            pypardiso = None
         D = np.unique(np.concatenate(D)).astype(np.int64)
         I = np.setdiff1d(np.arange(self.ndofs), D)
         Kc = K[I][:, I].tocsr()
         multi = isinstance(f, (list, tuple))
         F = np.ascontiguousarray(np.column_stack(f if multi else [f])[I])
-        X = pypardiso.spsolve(Kc, F).reshape(len(I), -1)
+        if pypardiso is None:
+            X = spla.splu(Kc.tocsc()).solve(F).reshape(len(I), -1)
+        else:
+            X = pypardiso.spsolve(Kc, F).reshape(len(I), -1)
         U = np.zeros((self.ndofs, X.shape[1])); U[I] = X
         return [U[:, k] for k in range(U.shape[1])] if multi else U[:, 0]
 

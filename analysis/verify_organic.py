@@ -26,11 +26,33 @@ BEAR_M, BEAR_I = 2 * 0.32, 2 * 0.18 * 2.7**2
 
 
 def mesh_stl(stl, h=0.6, h_min=0.25, angle=40):
+    """Tet mesh of a closed STL. First try: gmsh reparametrises the surface and remeshes it at size h.
+    Fallback (complex topology): decimate the STL to ~h triangles and fill the volume from them directly."""
+    import gmsh
+    try:
+        return _mesh_stl(stl, h, h_min, angle, reparam=True)
+    except Exception as e:
+        print(f"    reparametrisation failed ({e}); using the decimated discrete surface", flush=True)
+        try:
+            gmsh.finalize()
+        except Exception:
+            pass
+        import trimesh, tempfile, os
+        m = trimesh.load(stl)
+        target = int(max(2000, 2.3 * m.area / (0.433 * h**2)))     # ~equilateral triangles of edge h
+        if len(m.faces) > target:
+            m = m.simplify_quadric_decimation(face_count=target)
+        f = os.path.join(tempfile.mkdtemp(), "dec.stl"); m.export(f)
+        return _mesh_stl(f, h, h_min, angle, reparam=False)
+
+
+def _mesh_stl(stl, h, h_min, angle, reparam):
     import gmsh
     gmsh.initialize(); gmsh.option.setNumber("General.Terminal", 0)
     gmsh.merge(stl)
-    gmsh.model.mesh.classifySurfaces(angle * np.pi / 180, True, True, np.pi)
-    gmsh.model.mesh.createGeometry()
+    if reparam:
+        gmsh.model.mesh.classifySurfaces(angle * np.pi / 180, True, True, np.pi)
+        gmsh.model.mesh.createGeometry()
     s = gmsh.model.getEntities(2)
     l = gmsh.model.geo.addSurfaceLoop([e[1] for e in s])
     gmsh.model.geo.addVolume([l])
@@ -40,9 +62,16 @@ def mesh_stl(stl, h=0.6, h_min=0.25, angle=40):
     gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", 0)
     gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
     gmsh.option.setNumber("Mesh.Algorithm", 6)
-    gmsh.option.setNumber("Mesh.Algorithm3D", 10)
     gmsh.option.setNumber("Mesh.Optimize", 1)
-    gmsh.model.mesh.generate(3)
+    for alg in (10, 1, 4):                       # HXT, Delaunay, Frontal
+        try:
+            gmsh.option.setNumber("Mesh.Algorithm3D", alg)
+            gmsh.model.mesh.generate(3)
+            break
+        except Exception:
+            gmsh.model.mesh.clear()
+            if alg == 4:
+                gmsh.finalize(); raise
     nt, xyz, _ = gmsh.model.mesh.getNodes()
     et, _, en = gmsh.model.mesh.getElements(3)
     T = np.array(en[list(et).index(4)], np.int64).reshape(-1, 4)
@@ -80,13 +109,16 @@ def loads(m, s, n_ang=6):
                                                              (ramp(x[2] - s["edge"]) if band == "e0" else ramp(W - s["edge"] - x[2])))
             dirn = lambda x: np.array([-np.cos(c) + 0 * x[0], -np.sin(c) + 0 * x[0], 0 * x[0]])
             return m.traction_weighted(bf_all[sel], wf, dirn, F_)[0]
+        want = set(s.get("lcs", [])) | set(s.get("verify_extra", []))
         F.append(radial(phi, F_=1.0)); names.append("run" + tag)
-        F.append(radial(phi)); names.append("press" + tag)
-        F.append(radial(phi, "e0")); names.append("press_e0" + tag)
-        F.append(radial(phi, "eW")); names.append("press_eW" + tag)
-        F.append(radial(phi) + radial(phi + np.pi)); names.append("pinch" + tag)
-        F.append(radial(phi, "e0") + radial(phi + np.pi, "e0")); names.append("pinch_e0" + tag)
+        for nm, f in (("press", lambda: radial(phi)), ("press_e0", lambda: radial(phi, "e0")),
+                      ("press_eW", lambda: radial(phi, "eW")), ("pinch", lambda: radial(phi) + radial(phi + np.pi)),
+                      ("pinch_e0", lambda: radial(phi, "e0") + radial(phi + np.pi, "e0"))):
+            if nm in want:
+                F.append(f()); names.append(nm + tag)
         for zz, sg, nm in ((0.0, 1, "lip0"), (W, -1, "lipW")):
+            if nm not in want:
+                continue
             sel = (np.abs(mid_all[2] - zz) < 0.05) & (np.abs(nrm_all[2]) > 0.9) & (r_(mid_all) > R - s["t_rim"] - 0.1) & (np.abs(d_(mid_all, phi)) < np.deg2rad(18))
             wf = lambda x, c=phi: cos2(d_(x, c), np.deg2rad(16))
             F.append(m.traction_weighted(bf_all[sel], wf, lambda x, g=sg: np.array([0 * x[0], 0 * x[0], g + 0 * x[0]]), s["F"])[0])
@@ -95,7 +127,7 @@ def loads(m, s, n_ang=6):
         cx, cy = 8.5 * np.cos(phi), 8.5 * np.sin(phi)
         rc = lambda x: np.hypot(x[0] - cx, x[1] - cy)
         sel = (rc(mid_all) < 4.3) & (nrm_all[2] < -0.9) & (mid_all[2] < 2.0) & (r_(mid_all) < R - s["t_rim"] - 0.05)
-        if sel.sum() > 3:
+        if "thumb" in want and sel.sum() > 3:
             wf = lambda x: ramp(rc(x) - 4.0, 0.5)
             F.append(m.traction_weighted(bf_all[sel], wf, lambda x: np.array([0 * x[0], 0 * x[0], 1 + 0 * x[0]]), s["F"])[0])
             names.append("thumb" + tag)
@@ -105,7 +137,7 @@ def loads(m, s, n_ang=6):
     return F, names, D
 
 
-def run(stl, setup, h=0.6, h_min=0.25, n_ang=6, buckle=3, log=print):
+def run(stl, setup, h=0.6, h_min=0.25, n_ang=6, buckle=3, log=print, modes=True):
     s = setup
     t0 = time.time()
     P, T = mesh_stl(stl, h, h_min)
@@ -123,7 +155,8 @@ def run(stl, setup, h=0.6, h_min=0.25, n_ang=6, buckle=3, log=print):
     worst = []
     for nm, u in zip(names, U):
         if nm.startswith("run"):
-            top = np.argmin(np.sum((m.X - np.array([[0], [s["R"]], [s["W"] / 2]]))**2, 0))
+            ph = np.pi / 2 + np.deg2rad(float(nm.split("@")[1]))          # probe under the load
+            top = np.argmin(np.sum((m.X - np.array([[s["R"] * np.cos(ph)], [s["R"] * np.sin(ph)], [s["W"] / 2]]))**2, 0))
             res["cases"][nm] = dict(um_per_N=float(np.linalg.norm(u[3 * top:3 * top + 3]) * 1e3))
             continue
         vm, s1, _ = _vm_s1(m.nodal_stress(u))
@@ -151,6 +184,10 @@ def run(stl, setup, h=0.6, h_min=0.25, n_ang=6, buckle=3, log=print):
             log(f"buckling {nm}: lambda_1 = {lam[-1][0]:.2f}")
             del KG
         res["buckling"] = lam
+    if modes:
+        f, _ = m.eigs(K, m.mass_matrix(), D, k=6, mode="modes")
+        res["modes_Hz"] = sorted(np.abs(f).tolist())
+        log(f"natural frequencies (Hz): {', '.join(f'{x:.0f}' for x in res['modes_Hz'])} (rotation 333 Hz)")
     log(f"done [{time.time()-t0:.0f}s]")
     return res
 

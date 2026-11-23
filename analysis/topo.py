@@ -305,10 +305,20 @@ class Wheel:
 
     # ---------- physics ----------
     def solve(self, Ee, keep=False, F=None):
-        import pypardiso
         F = self.F if F is None else F
         K = self.K(Ee)
         Kf = K[self.free][:, self.free]
+        try:
+            import pypardiso
+        except ImportError:                       # no MKL (e.g. Apple Silicon): SciPy SuperLU on the full matrix
+            Kfull = (Kf + sp.triu(Kf, 1).T).tocsc()
+            lu = __import__("scipy.sparse.linalg", fromlist=["splu"]).splu(Kfull)
+            U = np.zeros((self.ndofs, F.shape[1])); U[self.free] = lu.solve(np.ascontiguousarray(F[self.free]))
+            if keep:
+                def again(B):
+                    X = np.zeros_like(B); X[self.free] = lu.solve(np.ascontiguousarray(B[self.free])); return X
+                return U, again
+            return U
         Kf = sp.triu(Kf, format="csr"); Kf.sort_indices()
         solver = pypardiso.PyPardisoSolver(mtype=2)
         solver.factorize(Kf)
@@ -535,8 +545,15 @@ def optimise_inertia(s: Setup, out="topo_inertia.npz", log=print, sigma_target=N
     x = np.full(w.nvar, 0.5)
     xmin, xmax = np.zeros(w.nvar), np.ones(w.nvar)
     L = U_ = x1 = x2 = None
-    beta, cn, hist = 1.0, 1.0, []
-    for it in range(s.iters):
+    beta, cn, hist, it0 = 1.0, 1.0, [], 0
+    import os
+    if os.path.exists(out):                                              # resume an interrupted run
+        d = np.load(out, allow_pickle=True)
+        if len(d["x"]) == w.nvar:
+            x, beta, hist = d["x"], float(d["beta"]), json.loads(str(d["hist"]))
+            it0 = len(hist)
+            log(f"resuming from iteration {it0} (beta {beta})")
+    for it in range(it0, s.iters):
         if it > 0 and it % 25 == 0 and beta < 16:
             beta *= 2
         pe, dpe, pb, dpb = w.densities(x, beta)
@@ -575,9 +592,11 @@ def optimise_inertia(s: Setup, out="topo_inertia.npz", log=print, sigma_target=N
         log(f"it {it:3d} beta {beta:4.0f} m_eq {I_b / s.R**2:.3f} g (design {Iw / s.R**2:.3f}) mass {m_b:.3f} g | "
             f"max vM {true_max:5.1f} MPa ({w.lc_names[jw[2]]}, r {w.rc[jw[0]]:.1f} z {w.zc[jw[0]]:.1f}) "
             f"P-norm {G:5.1f} | grey {grey:.3f} change {change:.3f} [{time.time()-t1:.0f}s]")
-        if beta >= 16 and change < 0.01 and it > 80:
-            break
-        if it % 10 == 0:
+        if beta >= 16 and len(hist) > 20:                               # converged: m_eq flat, stress on target
+            m10 = [h["meq"] for h in hist[-10:]]
+            if (max(m10) - min(m10)) / m10[-1] < 0.002 and abs(true_max / sigma_target - 1) < 0.05:
+                log("converged"); break
+        if it % 5 == 0:
             np.savez_compressed(out, x=x, rho=pb, rho_e=pe, beta=beta, setup=json.dumps(asdict(s), default=list),
                                 r=w.r, z=w.z, nt=w.nt, hist=json.dumps(hist))
     pe, dpe, pb, dpb = w.densities(x, beta)
