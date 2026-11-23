@@ -491,7 +491,7 @@ def mma_step(x, df0, g, dg, xmin, xmax, L, U, x1, x2, it, move=0.1):
     """One MMA step (Svanberg 1987) for min f0(x) s.t. g(x) <= 0 with a single constraint; the convex
     separable subproblem is solved through its 1-D dual (bisection on the multiplier)."""
     rng = xmax - xmin
-    if it < 2:
+    if it < 2 or L is None:
         L = x - 0.2 * rng; U = x + 0.2 * rng
     else:
         sgn = (x - x1) * (x1 - x2)
