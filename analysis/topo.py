@@ -43,7 +43,9 @@ class Setup:
     r_bore: float = 3.0
     r_hub: float = 4.0                       # bearing-holder outer radius (hub wall 1.0)
     seats: tuple = ((6.1, 11.1),)            # bearing seats (fixed bore) and the non-design hub length
-    t_rim: float = 0.7                       # thin non-design rim
+    t_rim: float = 0.7                       # thin non-design rim skin (the optimiser thickens it inwards)
+    rim_zone: float = 2.5                    # radial band inside the rim meshed finer so its thickness can vary
+    h_rim: float = 0.2                       # element size in that band
     E: float = 1700.0
     nu: float = 0.40
     rho: float = 930.0                       # kg/m^3
@@ -77,12 +79,13 @@ def _axis(breaks, h):
 class Wheel:
     def __init__(self, s: Setup):
         self.s = s
-        r = _axis([s.r_bore, s.r_hub, s.R - s.t_rim, s.R], s.h)
-        # two elements through the rim at least
-        rim = np.linspace(s.R - s.t_rim, s.R, 3)
-        r = np.unique(np.round(np.concatenate([r[r < s.R - s.t_rim - 1e-9], rim]), 9))
+        r0 = s.R - s.t_rim - s.rim_zone
+        r = _axis([s.r_bore, s.r_hub, r0], s.h)
+        rz = _axis([r0, s.R - s.t_rim], s.h_rim)
+        rim = np.linspace(s.R - s.t_rim, s.R, 2 if s.t_rim < 0.45 else 3)
+        r = np.unique(np.round(np.concatenate([r, rz, rim]), 9))
         z = _axis([0, s.W, s.edge, s.W - s.edge] + [v for sz in s.seats for v in sz], s.h)
-        m = max(1, int(round(2 * np.pi * (s.R - s.t_rim) / s.N / (1.35 * s.h))))
+        m = max(1, int(round(2 * np.pi * (s.R - s.t_rim) / s.N / (1.0 * s.h))))
         nt = s.N * m
         self.r, self.z, self.nt, self.m = r, z, nt, m
         self.dth = 2 * np.pi / nt
