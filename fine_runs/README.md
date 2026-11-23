@@ -135,7 +135,7 @@ keep 0.8, or use `--no-verify` and send back the STLs.
 ## What to send back
 
 The whole `fine_runs/results/` folder: `summary.csv`, plus per run `summary.json`, `log.txt`, `wheel.png`,
-`wheel.stl` and `density.npz`. Commit it on a branch, or zip it. The STLs can be large (50–80 MB), so zip
+`wheel.stl` and `density.npz`. Commit it on a branch with `git add -f fine_runs/results` (the folder is git-ignored so half-finished runs are not committed by accident), or zip it. The STLs can be large (50–80 MB), so zip
 them or leave them out if they're too big for git.
 
 ## Reading the results
