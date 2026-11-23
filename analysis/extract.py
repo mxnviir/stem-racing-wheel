@@ -57,6 +57,27 @@ def add_holes(phi, axes, s, n, d, r_h, side="W", depth=4.0):
     return phi
 
 
+def enforce_min_thickness(phi, axes, s, voxel, t_min):
+    """Thicken every wall thinner than t_min to t_min (and leave thicker walls alone): signed distance
+    of the solid plus a local offset (t_min - T)/2, T = thickness of the nearest medial point; then
+    clipped back to the wheel envelope (so walls grow inwards from the end planes / rim)."""
+    solid = phi > 0
+    din = ndimage.distance_transform_edt(solid) * voxel
+    dout = ndimage.distance_transform_edt(~solid) * voxel
+    sd = np.where(solid, din - 0.5 * voxel, -(dout - 0.5 * voxel))
+    mx = ndimage.maximum_filter(din, size=3)
+    ridge = solid & (din >= mx - 1e-9) & (din > 0)
+    T = np.zeros_like(din); T[ridge] = 2 * din[ridge]
+    _, ind = ndimage.distance_transform_edt(~ridge, return_indices=True)
+    Tn = T[tuple(ind)]
+    off = np.clip((t_min - Tn) / 2, 0, None) * 1.1
+    phi2 = sd + off
+    xs, ys, zs = axes
+    X, Y, Z = np.meshgrid(xs, ys, zs, indexing="ij")
+    rr = np.hypot(X, Y)
+    return np.minimum.reduce([phi2, s["R"] - rr, rr - s["r_bore"], Z, s["W"] - Z])
+
+
 def surface(phi, axes, smooth=10):
     from skimage.measure import marching_cubes
     import trimesh
@@ -100,6 +121,18 @@ def thickness(phi, voxel):
     return 2 * d[ridge], ridge, d
 
 
+def ray_thickness(m, n=30000, seed=0):
+    import trimesh
+    """Wall thickness at random surface points: distance along the inward normal to the opposite wall."""
+    np.random.seed(seed)
+    pts, fi = trimesh.sample.sample_surface(m, n)
+    nrm = m.face_normals[fi]
+    loc, idx_ray, _ = m.ray.intersects_location(pts - 1e-4 * nrm, -nrm, multiple_hits=False)
+    t = np.full(n, np.nan)
+    t[idx_ray] = np.linalg.norm(loc - pts[idx_ray], axis=1)
+    return t, pts
+
+
 if __name__ == "__main__":
     npz = sys.argv[1]; out = sys.argv[2] if len(sys.argv) > 2 else npz.replace(".npz", ".stl")
     voxel = float(sys.argv[3]) if len(sys.argv) > 3 else 0.12
@@ -108,9 +141,15 @@ if __name__ == "__main__":
     if len(sys.argv) > 4:                                   # holes: n,d,r_h
         n_h, d_h, r_h = sys.argv[4].split(",")
         phi = add_holes(phi, axes, s, int(n_h), float(d_h), float(r_h))
+    t_min = float(sys.argv[5]) if len(sys.argv) > 5 else 0.7
+    if t_min > 0:
+        phi = enforce_min_thickness(phi, axes, s, voxel, t_min + voxel)
     m = snap(surface(phi, axes), s)
     m.export(out)
-    t, _, _ = thickness(phi, voxel)
+    t, pts = ray_thickness(m)
+    rr = np.hypot(pts[:, 0], pts[:, 1])
+    # sharp convex edges (hole rims, face/rim corners) give short rays by construction; report the walls
+    t = t[np.isfinite(t)]
     print(f"{out}: {len(m.faces)} triangles, {m.metadata['n_shells']} shells (>1 = enclosed cavities), watertight {m.is_watertight}, volume {m.volume:.1f} mm^3, "
-          f"mass {m.volume * s['rho'] * 1e-6:.3f} g; wall thickness 1st/5th percentile {np.percentile(t, 1):.2f}/"
-          f"{np.percentile(t, 5):.2f} mm, min {t.min():.2f} mm")
+          f"mass {m.volume * s['rho'] * 1e-6:.3f} g; ray wall thickness 0.5/1/5th percentile {np.percentile(t, 0.5):.2f}/"
+          f"{np.percentile(t, 1):.2f}/{np.percentile(t, 5):.2f} mm, median {np.median(t):.2f} mm")
