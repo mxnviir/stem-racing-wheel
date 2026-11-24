@@ -120,3 +120,17 @@ Fine runs: `fine_runs/` (GitHub Actions workflow `.github/workflows/fine-runs.ym
 - Topology: a thin central web (diaphragm), not discrete spokes.
 - The resin run r07 (0.3 mm) was still optimising at its last checkpoint. That checkpoint geometry is a hollow two-wall box
   (m_eq ≈ 1.06 g). Its final result is pending on GitHub Actions.
+
+### Stage 6 — fine-run batch (GitHub Actions run #10)
+
+| run | m_eq (g) | stress / allowable | buckling | f1 (Hz) | note |
+|---|---|---|---|---|---|
+| r03 N4 | 1.249 | 0.49 | 16.5 | 1340 | min-wall rule added 0.27 g |
+| r04 N8 | 1.247 | 0.63 | 13.5 | 1617 | min-wall rule added 0.23 g |
+| r05 N6, 0.4 mm | 0.885 | **1.27** (fail) | 3.1 | 436 | organic spokes |
+
+- Neither r03 nor r04 beats r02 (1.075).
+- r05 fails on stress: the optimiser under-reads 0.4 mm members on its 0.5 mm grid by about 27 %. Queued **r05b**: the same setup
+  with sigma_target 14 MPa.
+- r01's runner was lost at iteration 104; it is resuming.
+- r07 (resin) is still optimising.

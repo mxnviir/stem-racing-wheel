@@ -176,6 +176,24 @@ a continuous web costs less inertia than spokes at this wall thickness.
 The resin run (r07, Accura AMX, 0.3 mm) was at iteration 134 at its last checkpoint and is not yet final.
 There, the optimiser formed a hollow box of two ~0.45 mm side walls (m_eq ≈ 1.06 g at the checkpoint).
 
+### All fine runs so far (full check: P2 tets, rolling every 1°, wheel only)
+
+| run | m_eq | mass | stress / allowable | buckling | f1 | min-wall rule added | status |
+|---|---|---|---|---|---|---|---|
+| r02 N5, 0.6 mm | **1.075 g** | 1.46 g | 0.80 | 5.7 | 1080 Hz | 0 g | **pass, best valid** |
+| r03 N4, 0.6 mm | 1.249 g | 1.89 g | 0.49 | 16.5 | 1340 Hz | 0.27 g | pass, heavy |
+| r04 N8, 0.6 mm | 1.247 g | 1.79 g | 0.63 | 13.5 | 1617 Hz | 0.23 g | pass, heavy (iteration cap) |
+| r05 N6, 0.4 mm | 0.885 g | 1.25 g | **1.27** | 3.1 | 436 Hz | 0 g | FAIL: stress (pinch) |
+| r01 N6, 0.6 mm | — | — | — | — | — | — | runner lost at iteration 104; resuming |
+| r07 resin, 0.3 mm | ≈1.06 g (checkpoint) | ≈1.60 g | — | — | — | — | still optimising |
+
+- **r03/r04:** the optimiser drew features thinner than 0.6 mm. The min-wall rule then added 0.23–0.27 g at extraction,
+  which makes both wheels heavy and over-strong. Even before that rule ran, their m_eq (1.15 g) was above r02's,
+  so they are not worth re-running.
+- **r05 (0.4 mm wall) is the only fine run with clear organic spokes** (6 branching spokes between two side walls).
+  It also has the lowest inertia. The optimiser under-read its peak stress by about 27 %: 0.4 mm members sit on a
+  0.5 mm grid. **r05b** re-runs it with `sigma_target` 14 MPa instead of 18.9 MPa.
+
 ## Rim thickness vs process — read this
 
 The rim skin can't be thinner than the process's minimum printable wall. Extraction forces every wall,
