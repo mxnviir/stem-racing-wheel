@@ -1,5 +1,5 @@
 {
- "_comment": "Fine topology-optimisation runs. Each entry: Setup parameters for analysis/topo.py plus t_min (manufacturing minimum wall, enforced on the output geometry) and verify_h (tet size for the full-accuracy check). Loads: radial press + diametral pinch only (20 N, full width, several angles) - no edge, lip or axial loads. Objective: minimum rotational inertia; constraint: von Mises <= 0.9 x (UTS/2) everywhere. n_phi = load angles per symmetry sector, set for ~10 deg spacing (a coarse reference run with 20 deg spacing over-fitted to the sampled angles and failed the full check at the angles in between).",
+ "_comment": "Fine topology-optimisation runs. Each entry: Setup parameters for analysis/topo.py plus t_min (minimum wall, enforced on the output geometry), verify_h (tet size of the full-accuracy check) and verify_step_deg. Loads model the wheel ROLLING on flat ground: the 20 N radial press and the 20 N diametral pinch are applied at every position across one symmetry sector - every 5 deg in the optimiser (n_phi per sector) and every 1 deg in the final check (effectively continuous), plus the 1 N running load and 20 000 rpm spin. No edge or axial loads. Objective: minimum rotational inertia of the wheel body (bearings excluded); constraint: von Mises <= sigma_target (default 0.9 x UTS/2).",
  "runs": [
   {
    "name": "r01_N6_skin0.7",
@@ -10,16 +10,17 @@
     "rim_zone": 2.5,
     "h": 0.5,
     "h_rim": 0.15,
-    "rf": 1.0,
+    "rf": 1.4,
     "iters": 220,
     "lcs": [
      "press",
      "pinch"
     ],
-    "n_phi": 6
+    "n_phi": 12
    },
    "t_min": 0.7,
-   "verify_h": 0.8
+   "verify_h": 0.8,
+   "verify_step_deg": 1.0
   },
   {
    "name": "r02_N5_skin0.7",
@@ -30,16 +31,17 @@
     "rim_zone": 2.5,
     "h": 0.5,
     "h_rim": 0.15,
-    "rf": 1.0,
+    "rf": 1.4,
     "iters": 220,
     "lcs": [
      "press",
      "pinch"
     ],
-    "n_phi": 7
+    "n_phi": 14
    },
    "t_min": 0.7,
-   "verify_h": 0.8
+   "verify_h": 0.8,
+   "verify_step_deg": 1.0
   },
   {
    "name": "r03_N4_skin0.7",
@@ -50,16 +52,17 @@
     "rim_zone": 2.5,
     "h": 0.5,
     "h_rim": 0.15,
-    "rf": 1.0,
+    "rf": 1.4,
     "iters": 220,
     "lcs": [
      "press",
      "pinch"
     ],
-    "n_phi": 9
+    "n_phi": 18
    },
    "t_min": 0.7,
-   "verify_h": 0.8
+   "verify_h": 0.8,
+   "verify_step_deg": 1.0
   },
   {
    "name": "r04_N8_skin0.7",
@@ -70,16 +73,17 @@
     "rim_zone": 2.5,
     "h": 0.5,
     "h_rim": 0.15,
-    "rf": 1.0,
+    "rf": 1.4,
     "iters": 220,
     "lcs": [
      "press",
      "pinch"
     ],
-    "n_phi": 4
+    "n_phi": 9
    },
    "t_min": 0.7,
-   "verify_h": 0.8
+   "verify_h": 0.8,
+   "verify_step_deg": 1.0
   },
   {
    "name": "r05_N6_skin0.4",
@@ -90,36 +94,38 @@
     "rim_zone": 2.5,
     "h": 0.5,
     "h_rim": 0.15,
-    "rf": 0.7,
+    "rf": 0.9,
     "iters": 220,
     "lcs": [
      "press",
      "pinch"
     ],
-    "n_phi": 6
+    "n_phi": 12
    },
    "t_min": 0.4,
-   "verify_h": 0.7
+   "verify_h": 0.7,
+   "verify_step_deg": 1.0
   },
   {
    "name": "r06_N6_skin0.7_h0.4",
-   "note": "mesh-refinement check of r01 (needs ~16 GB RAM, slow)",
+   "note": "mesh-refinement check of r01 (needs ~16 GB RAM, slow) - needs ~20 GB RAM: run locally, not on a standard GitHub runner",
    "setup": {
     "N": 6,
     "t_rim": 0.7,
     "rim_zone": 2.5,
     "h": 0.4,
     "h_rim": 0.12,
-    "rf": 1.0,
+    "rf": 1.4,
     "iters": 220,
     "lcs": [
      "press",
      "pinch"
     ],
-    "n_phi": 6
+    "n_phi": 12
    },
    "t_min": 0.7,
-   "verify_h": 0.7
+   "verify_h": 0.7,
+   "verify_step_deg": 1.0
   }
  ]
 }

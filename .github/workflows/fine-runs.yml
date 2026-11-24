@@ -16,6 +16,10 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: write     # collect job commits small result files to the fine-run-results branch
+  actions: read       # fetch checkpoints from earlier runs (resume across the 6 h job limit)
+
 jobs:
   fine-run:
     runs-on: ubuntu-latest
@@ -29,7 +33,7 @@ jobs:
           - r03_N4_skin0.7
           - r04_N8_skin0.7
           - r05_N6_skin0.4
-          - r06_N6_skin0.7_h0.4
+          # r06_N6_skin0.7_h0.4 needs ~20 GB RAM: run it on a bigger machine, not a standard runner
 
     steps:
       - uses: actions/checkout@v4
@@ -70,12 +74,23 @@ jobs:
               print(f'pypardiso unavailable: {e} (will fall back to SuperLU)')
           "
 
-      - name: Download checkpoint (if resuming)
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ matrix.run }}-results
-          path: fine_runs/results/${{ matrix.run }}
+      - name: Download checkpoint from the latest earlier run (resume)
+        # download-artifact@v4 only sees the current run, so look up the newest artifact of this
+        # name across all runs. run_all.py discards it automatically if runs.json settings changed.
         continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NAME="${{ matrix.run }}-results"
+          RUN_ID=$(gh api "repos/${{ github.repository }}/actions/artifacts?name=$NAME&per_page=1" \
+                   --jq '.artifacts[0].workflow_run.id // empty')
+          if [ -n "$RUN_ID" ] && [ "$RUN_ID" != "${{ github.run_id }}" ]; then
+            mkdir -p "fine_runs/results/${{ matrix.run }}"
+            gh run download "$RUN_ID" -R "${{ github.repository }}" -n "$NAME" -D "fine_runs/results/${{ matrix.run }}" \
+              && echo "resuming from run $RUN_ID" || echo "no usable checkpoint"
+          else
+            echo "no earlier checkpoint for $NAME"
+          fi
 
       - name: Determine if this run should execute
         id: should-run
@@ -217,3 +232,21 @@ jobs:
           name: all-fine-run-results
           path: fine_runs/results/
           retention-days: 90
+
+      - name: Commit small result files to the fine-run-results branch
+        # summaries, logs, renders and density fields (no STLs) so results can be read with plain git
+        run: |
+          set -e
+          mkdir -p /tmp/res && cd fine_runs/results
+          for d in */; do
+            d="${d%/}"; mkdir -p "/tmp/res/$d"
+            cp "$d"/summary.json "$d"/log.txt "$d"/wheel.png "$d"/density.npz "/tmp/res/$d/" 2>/dev/null || true
+          done
+          cd /tmp/res
+          git init -q -b fine-run-results
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          printf "Results of workflow run ${{ github.run_id }} (commit ${{ github.sha }})\n" > RUN.txt
+          git add -A && git commit -q -m "Fine-run results from workflow run ${{ github.run_id }}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" \
+            fine-run-results:fine-run-results

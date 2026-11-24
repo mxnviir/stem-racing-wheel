@@ -33,6 +33,8 @@ def do_extract(npz, stl, t_min, voxel, log):
     s, r, z, nt, rho = extract.load(npz)
     phi0, axes = extract.field(s, r, z, nt, rho, voxel)
     phi = extract.enforce_min_thickness(phi0, axes, s, voxel, t_min) if t_min > 0 else phi0
+    added = float(((phi > 0) & ~(phi0 > 0)).sum() * voxel**3 * s["rho"] * 1e-6)   # g added by the min-wall rule
+    log(f"min-wall rule added {added:.3f} g ({'OK' if added < 0.05 * max(1e-9, float((phi0 > 0).sum() * voxel**3 * s['rho'] * 1e-6)) else 'LARGE: optimiser features thinner than t_min, raise rf'})")
     m = extract.snap(extract.surface(phi, axes), s)
     holes = None
     if m.metadata.get("n_cavities", 0) > 0:             # enclosed cavity: SLS powder cannot get out
@@ -47,7 +49,7 @@ def do_extract(npz, stl, t_min, voxel, log):
         log(f"WARNING: {m.metadata['n_loose']} loose solid bodies not attached to the wheel (design not converged?)")
     info = dict(triangles=len(m.faces), shells=m.metadata.get("n_shells", 1), cavities=m.metadata.get("n_cavities", 0),
                 loose_bodies=m.metadata.get("n_loose", 0), watertight=bool(m.is_watertight),
-                volume_mm3=float(m.volume), mass_g=float(m.volume * s["rho"] * 1e-6),
+                volume_mm3=float(m.volume), mass_g=float(m.volume * s["rho"] * 1e-6), min_wall_added_g=added,
                 wall_p1_mm=float(np.percentile(t, 1)), wall_median_mm=float(np.median(t)), holes=holes)
     log(f"extract: {info}")
     return info
@@ -86,6 +88,13 @@ def run_one(spec, smoke=False, verify=True):
     npz, stl = os.path.join(d, "density.npz"), os.path.join(d, "wheel.stl")
     summary_f = os.path.join(d, "summary.json")
     summary = json.load(open(summary_f)) if os.path.exists(summary_f) else dict(name=name, spec=spec)
+    if summary.get("spec", spec) != spec and not smoke:      # settings changed: never resume a stale checkpoint
+        import shutil
+        old_dir = d + "_stale_" + time.strftime("%Y%m%d%H%M%S")
+        shutil.move(d, old_dir); os.makedirs(d, exist_ok=True)
+        print(f"settings of {name} changed since the saved checkpoint -> old results moved to {old_dir}, starting fresh")
+        summary = dict(name=name, spec=spec)
+    summary["spec"] = spec
     log(f"=== {name}: {spec.get('note', '')} | {platform.platform()}, {os.cpu_count()} cpus")
     # 1. optimise (resumes automatically from density.npz)
     if "optimise" not in summary:
@@ -106,7 +115,9 @@ def run_one(spec, smoke=False, verify=True):
         import verify_organic
         s = json.loads(str(np.load(npz, allow_pickle=True)["setup"]))
         h = spec.get("verify_h", 0.6) if not smoke else 1.2
-        summary["verify"] = verify_organic.run(stl, s, h=h, h_min=min(0.25, h / 2), n_ang=6 if not smoke else 2,
+        n_ang = max(2, int(round(360.0 / s["N"] / spec.get("verify_step_deg", 1.0))))   # rolling sweep
+        log(f"verification: load every {360.0 / s['N'] / n_ang:.2f} deg across the sector ({n_ang} positions)")
+        summary["verify"] = verify_organic.run(stl, s, h=h, h_min=min(0.25, h / 2), n_ang=n_ang if not smoke else 2,
                                                buckle=3 if not smoke else 0, log=log, modes=not smoke)
         json.dump(summary, open(summary_f, "w"), indent=1, default=float)
     # 4. render

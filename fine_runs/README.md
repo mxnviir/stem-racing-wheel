@@ -22,6 +22,31 @@ Loads, as agreed: **radial press and diametral pinch only, 20 N, full width**. T
 loads. Edit `"lcs"` in `runs.json` to change that: the available cases are `press`, `pinch`, `press_e0`,
 `press_eW`, `pinch_e0`, `lip0` and `lipW`.
 
+## Loads: the wheel rolling on flat ground
+
+The 20 N radial press and the 20 N diametral pinch are applied at every position the wheel can roll into.
+Thanks to the N-fold symmetry, one sector covers all of them.
+
+- **Optimiser:** a load every 5° across the sector (`n_phi`).
+- **Final check:** a load every 1° (`verify_step_deg`), which is effectively continuous.
+
+There is no uniform pressure around the wheel, because there's no tyre to create one. Spin (20 000 rpm)
+is the only uniform load, and it is included. Masses and m_eq are for the **wheel body only; bearings are
+excluded**.
+
+## Running on GitHub Actions
+
+Use the `.github/workflows/fine-runs.yml` workflow (Actions tab, "Run workflow"). A job stops at 320 minutes
+and uploads its checkpoint. Dispatch the workflow again and it **resumes from the newest checkpoint**.
+
+- `run_all.py` discards a checkpoint whose `runs.json` settings have changed.
+- Small result files (summary, log, render, density field) are pushed to the `fine-run-results` branch.
+- r06 needs about 20 GB and is not in the CI matrix.
+
+The filter radius `rf` is 1.4 mm for the 0.7 mm-wall runs. With 1.0 mm on the 0.5 mm grid, the optimiser
+made 0.5 mm features. The 0.7 mm minimum-wall rule then added about 26 % mass, and the result came out
+over-strong at 0.40× the allowable. `extract` now reports `min_wall_added_g`; if it's large, raise `rf`.
+
 ## Setup (once)
 
 Python 3.11–3.13, 64-bit. From the repository root:
