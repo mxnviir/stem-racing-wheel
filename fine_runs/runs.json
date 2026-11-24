@@ -126,6 +126,33 @@
    "t_min": 0.6,
    "verify_h": 0.7,
    "verify_step_deg": 1.0
+  },
+  {
+   "name": "r07_N6_AMXrigid_0.3",
+   "note": "3D Systems Accura AMX Rigid Black (SLA): E 2000 MPa, UTS 51 MPa (weakest print direction), rho 1150 kg/m3, nu 0.38 (assumed); 0.3 mm skin and minimum wall",
+   "setup": {
+    "N": 6,
+    "t_rim": 0.3,
+    "rim_zone": 2.5,
+    "h": 0.5,
+    "h_rim": 0.15,
+    "rf": 0.8,
+    "iters": 220,
+    "lcs": [
+     "press",
+     "pinch"
+    ],
+    "n_phi": 12,
+    "E": 2000.0,
+    "nu": 0.38,
+    "rho": 1150.0,
+    "strength": 51.0,
+    "material": "Accura AMX Rigid Black (SLA)"
+   },
+   "t_min": 0.3,
+   "voxel": 0.1,
+   "verify_h": 0.6,
+   "verify_step_deg": 1.0
   }
  ]
 }

@@ -50,6 +50,8 @@ class Setup:
     E: float = 1700.0
     nu: float = 0.40
     rho: float = 930.0                       # kg/m^3
+    strength: float = 42.0                   # UTS, MPa (allowable = strength / 2, SF 2)
+    material: str = "SLS PA12 (PA2200)"
     N: int = 6                               # cyclic symmetry order
     h: float = 0.45                          # target element size, mm
     rf: float = 1.2                          # filter radius, mm (~2 x minimum wall keeps features >= t_min)
@@ -534,7 +536,7 @@ def optimise_inertia(s: Setup, out="topo_inertia.npz", log=print, sigma_target=N
     eroded design over all elements, corners and load cases <= sigma_target."""
     t0 = time.time()
     w = Wheel(s)
-    allow = 42.0 / 2.0
+    allow = s.strength / 2.0
     sigma_target = sigma_target or 0.9 * allow
     log(f"grid: nr {w.nr} nt {w.nt} nz {w.nz} -> {w.ne} elements, {w.ndofs} dof, {w.nvar} variables, "
         f"{len(w.lc_names)} load cases; setup {time.time()-t0:.0f}s; stress target {sigma_target:.1f} MPa (vM)")

@@ -141,7 +141,11 @@ def run(stl, setup, h=0.6, h_min=0.25, n_ang=6, buckle=3, log=print, modes=True)
     s = setup
     t0 = time.time()
     P, T = mesh_stl(stl, h, h_min)
-    m = Model3D(P, T, PA12_SLS, extra_mass_g=BEAR_M, extra_Izz=BEAR_I)
+    mat = (Material(s.get("material", "material"), s["E"], s["nu"], s["rho"], s.get("strength", 42.0))
+           if "E" in s else PA12_SLS)
+    allow = mat.strength / 2
+    log(f"material: {mat.name}: E {mat.E:.0f} MPa, nu {mat.nu}, rho {mat.rho:.0f} kg/m3, UTS {mat.strength} MPa -> allowable {allow:.1f} MPa")
+    m = Model3D(P, T, mat, extra_mass_g=BEAR_M, extra_Izz=BEAR_I)
     mp = m.mass_props(half=False)
     log(f"mesh: {P.shape[1]} nodes, {T.shape[1]} tets, {m.ndofs} dof [{time.time()-t0:.0f}s]; "
         f"mass {mp['mass_g']:.3f} g, m_eq {mp['Izz_gmm2'] / s['R']**2:.3f} g (wheel only, no bearings)")
@@ -160,7 +164,7 @@ def run(stl, setup, h=0.6, h_min=0.25, n_ang=6, buckle=3, log=print, modes=True)
             res["cases"][nm] = dict(um_per_N=float(np.linalg.norm(u[3 * top:3 * top + 3]) * 1e3))
             continue
         vm, s1, _ = _vm_s1(m.nodal_stress(u))
-        q = np.maximum(s1, vm) / ALLOW
+        q = np.maximum(s1, vm) / allow
         q[~ok_pts] = 0
         i = int(np.argmax(q))
         res["cases"][nm] = dict(q=float(q[i]), s1=float(s1[i]), vm=float(vm[i]), at=m.X[:, i].round(2).tolist(),
