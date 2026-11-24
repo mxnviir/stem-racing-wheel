@@ -113,7 +113,7 @@ def run_one(spec, smoke=False, verify=True):
     png = os.path.join(d, "wheel.png")
     if not os.path.exists(png):
         v = summary.get("verify", {}) if "invalid" not in summary.get("verify", {}) else {}
-        title = (f"{name}: m_eq {v.get('m_eq_g', float('nan')):.3f} g (incl. bearings), mass {v.get('mass_g', float('nan')):.2f} g, "
+        title = (f"{name}: m_eq {v.get('m_eq_g', float('nan')):.3f} g (wheel only), mass {v.get('mass_g', float('nan')):.2f} g, "
                  f"max stress / allowable {v.get('q_max', float('nan')):.2f} ({v.get('governing', '-')})")
         render(stl, png, title)
     log(f"=== {name} done")

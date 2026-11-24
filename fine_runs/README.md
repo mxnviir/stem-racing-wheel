@@ -107,9 +107,9 @@ r01's setup on a coarse optimisation grid (h 0.9 mm, loads every 10°). The opti
 branching spokes** between the hub and the thin rim (`reference/wheel.png`). Printable mesh:
 `reference/organic_wheel_r01.stl`. Full-accuracy check of that STL:
 
-| m_eq (incl. bearings) | mass (incl. bearings) | max stress / allowable | buckling | f1 | min wall |
+| m_eq (wheel only) | mass (wheel only) | max stress / allowable | buckling | f1 | min wall |
 |---|---|---|---|---|---|
-| **1.215 g** (parametric drum: 1.370 g) | 2.17 g | **0.72** (0.73 at h 1.0, 0.72 at h 0.8) | ≥ 6.1 | 1015 Hz | no ray < 0.70 mm (60k rays) |
+| **1.202 g** (parametric drum: 1.357 g) | 1.53 g | **0.72** (0.73 at h 1.0, 0.72 at h 0.8) | ≥ 6.1 | 1015 Hz | no ray < 0.70 mm (60k rays) |
 
 How it got there:
 - **Load spacing.** A first attempt with loads every 20° failed (1.38) at the angles between the sampled ones.
@@ -161,7 +161,7 @@ them or leave them out if they're too big for git.
 
 | column | meaning |
 |---|---|
-| `m_eq_g` | rotational inertia as equivalent mass, **including the 2 bearings** (lower = faster car) |
+| `m_eq_g` | rotational inertia as equivalent mass of the **wheel body only, bearings excluded** (lower = faster car) |
 | `stress_ratio` | max(σ₁, σ_vM) / allowable over all load cases and angles; must be ≤ 1 |
 | `buckling_min` | lowest buckling load factor of the checked cases; must be ≥ 2 |
 | `f1_Hz` | first natural frequency; should be ≫ 333 Hz (20 000 rpm) |

@@ -21,7 +21,7 @@ ALLOW = PA12_SLS.strength / SF
 TMIN = 0.7
 PMIN = {"hub": 1.0}     # bearing-seat wall: press-fit/bonded MR63 retention in SLS nylon needs >= 1 mm
 RF = 1.0                # junction fillet radius (mm): at 0.5 mm the spoke-root Kt grows with spoke thickness
-BEAR_M, BEAR_I = 2 * 0.32, 2 * 0.18 * 2.7**2     # two MR63 (as in concepts.py)
+BEAR_M, BEAR_I = 0.0, 0.0     # bearings NOT included in mass / inertia (wheel body only); MR63 pair = 0.64 g, 2.62 g mm^2
 
 
 def phases(g):

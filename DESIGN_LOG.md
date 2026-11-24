@@ -34,7 +34,7 @@
 
 ## Stage 3 — concept screening + fully-stressed sizing (`concepts.py`, `size.py`, `summary.md`)
 Load cases: LC1 1 N running radial; LC2 20 N radial on axle; LC3 20 N pinch off-car; LC4 20 N thumb push on the side face (Ø8 mm at r = 8.5); LC5 20 000 rpm.
-Rear wheel Ø28.2 × 17.2, including 2 bearings (0.64 g). Min walls assumed: Al/CF 0.25, Ti 0.30, SLA 0.40, PA12 0.70 mm.
+Rear wheel Ø28.2 × 17.2, including 2 bearings (0.64 g mass, 0.013 g m_eq) in this stage's table; later stages exclude them. Min walls assumed: Al/CF 0.25, Ti 0.30, SLA 0.40, PA12 0.70 mm.
 
 | concept | m_eq g | mass g | governs |
 |---|---|---|---|
@@ -85,10 +85,25 @@ Face architecture (drum vs web), realistic minimum walls / CF tube sourcing, whe
 
 **Why spokes lose for PA12:** the 20 N rim-edge and rim-lip loads act on an 8.6 mm overhang (rim edge to a central web/spokes) or produce 20 N × 14 mm ≈ 280 N·mm at the spoke roots. Low-modulus PA12 then needs 1.2–1.4 mm rims and 2.5–3 mm spokes. A drum's faces sit at the rim edges and carry those loads in-plane, so the rim stays at the 0.7 mm minimum and only the faces are sized (by the thumb push).
 
-**Final SLS PA12 rear wheel** (`pa12_final.step`, `renders3d/pa12_final.png`): closed drum, rim 0.70 mm, faces 0.70 mm at the rim tapering to 1.12 mm at the hub, hub 1.0 mm, 1 mm fillets, 2 × Ø3 powder-escape holes at r = 8.5 in the inner face (needed: a sealed SLS cavity cannot be de-powdered; inner face keeps the outer face aero-clean). **m_eq 1.370 g, mass 2.83 g** (incl. 2 × MR63).
+**Final SLS PA12 rear wheel** (`pa12_final.step`, `renders3d/pa12_final.png`): closed drum, rim 0.70 mm, faces 0.70 mm at the rim tapering to 1.12 mm at the hub, hub 1.0 mm, 1 mm fillets, 2 × Ø3 powder-escape holes at r = 8.5 in the inner face (needed: a sealed SLS cavity cannot be de-powdered; inner face keeps the outer face aero-clean). **m_eq 1.357 g, mass 2.19 g** (wheel only; 1.370 / 2.83 g with the 2 bearings).
 - Stress (converged): governing q = 0.92 at the face–hub fillet under the thumb push (local refinement 0.25 → 0.20 mm: 0.903 → 0.918; extrapolated ≈ 0.93). Rim 0.75 (edge pinch), hub 0.62. All other cases lower. Hole position (under/between loads) changes q by < 1 %.
 - Global convergence (h 1.4 → 1.0 → 0.8 mm, 0.18–0.42 M dof): deflections and m_eq within 1 %.
 - Buckling (taper-1.5 design, i.e. conservative): lowest load factor 7.7 (pinch / edge pinch, antisymmetric), ≥ 13 for everything else.
 - First natural frequency 1700 Hz = 5.1 × the 333 Hz rotation.
 - Stiffness: running 5.7 µm/N at the contact centre, 0.15 µm/N at the edge; spin growth 13 µm on diameter at 20 000 rpm (≤ runout target scale: check balance/runout together).
 - Not yet modelled: bearing press-fit / bonded seat stresses (clamped-seat singularity excluded within 0.5 mm), SLS anisotropy beyond using the Z strength, creep, real contact.
+
+
+## Stage 6 — organic topology optimisation (2026-11-23/24)
+Engine: `analysis/topo.py` (minimum rotational inertia subject to the stress limit, density method, MMA, adjoint
+surface stresses, filter + robust projection, cyclic symmetry), `extract.py` (STL, min wall by medial-surface balls,
+powder holes into enclosed cavities), `verify_organic.py` (full-model P2 tets, all load angles, buckling, modes).
+Fixed parts only: bearing hub and a thin rim skin; the optimiser decides everything else, including rim thickening.
+Loads (as instructed): radial press + diametral pinch, 20 N, full width, no edge / axial loads.
+
+**Mass and inertia are reported for the wheel body only, bearings excluded (from 2026-11-24).**
+
+Reference result (coarse grid, `fine_runs/reference/`): organic branching spokes, **m_eq 1.202 g, mass 1.53 g**
+(parametric drum 1.357 g / 2.19 g), max stress 0.72 x allowable (mesh-checked), buckling >= 6.1, f1 1015 Hz,
+walls >= 0.70 mm. Load angles must be sampled finely: 20 deg spacing over-fitted (1.38 x allowable between angles).
+Fine runs: `fine_runs/` (GitHub Actions workflow `.github/workflows/fine-runs.yml`).

@@ -30,8 +30,9 @@ PA12 = Material("SLS PA12", 1700, 0.40, 1010, 48)
 
 R, W = 14.1, 17.2
 RB = 3.0                     # bearing seat radius (6 mm OD)
-BEAR_M = 2 * 0.32            # g, two MR63ZZ per wheel (whole bearing counts toward car mass)
-BEAR_I = 2 * 0.18 * 2.7**2   # g mm^2, rotating outer race + shields only (axle is fixed)
+MR63_M = 2 * 0.32            # g, two MR63ZZ per wheel (for reference only)
+MR63_I = 2 * 0.18 * 2.7**2   # g mm^2, their rotating outer races (for reference only)
+BEAR_M = BEAR_I = 0.0        # bearings are NOT included in reported mass / inertia (wheel body only)
 SEATS = [(0, 2.5), (W - 2.5, W)]
 EDGE = 3.0                   # mm, width of the rim-edge load band (LC6, LC7)
 LCS = ("LC2", "LC3", "LC4", "LC5", "LC6", "LC7", "LC8")   # load cases checked against strength

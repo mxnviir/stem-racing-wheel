@@ -5,6 +5,8 @@ Research code for designing the lightest robust wheel for a STEM Racing Professi
 SLS PA12, FDM ABS and carbon fibre. The analysis is a scripted, reproducible open-source FEA
 pipeline. Final designs are meant to be cross-checked independently in Ansys Student.
 
+> **All masses and m_eq are for the wheel body only (bearings excluded)** unless a table says otherwise.
+>
 > **Status (2026-11-23): organic topology-optimisation engine built** (`analysis/topo.py`, `extract.py`,
 > `verify_organic.py`): minimum rotational inertia subject to the stress limit, between a fixed bearing hub and a
 > thin rim skin, any shape in between. The fine runs are packaged in [`fine_runs/`](fine_runs/README.md) to run on a
@@ -12,7 +14,7 @@ pipeline. Final designs are meant to be cross-checked independently in Ansys Stu
 >
 > **Previous status (2026-11-22): stage 5 done for SLS PA12.** A general 3D pipeline (spokes, variable rim thickness,
 > fillets, buckling) is built and verified, and the SLS PA12 rear wheel is sized, converged and exported
-> (`analysis/pa12_final.step`): a closed drum with tapered faces and powder-escape holes, **m_eq 1.37 g, mass 2.83 g**.
+> (`analysis/pa12_final.step`): a closed drum with tapered faces and powder-escape holes, **m_eq 1.357 g, mass 2.19 g** (wheel only, no bearings).
 > See [§8](#8-3d-pipeline-and-the-sls-pa12-wheel) and [`DESIGN_LOG.md`](DESIGN_LOG.md). The hex-pipeline re-sizing of the
 > other material families with the new rim-edge load cases is paused (PA12 first, at the team's request).
 
@@ -170,7 +172,7 @@ role has q ≤ 1 and either q ≥ 0.85 or the role is at its process minimum gau
 
 ## 5. Results so far
 
-### Sized rear wheels (Ø28.2 × 17.2 mm, 2 bearings included)
+### Sized rear wheels (Ø28.2 × 17.2 mm; these historic numbers INCLUDE 2 bearings: subtract 0.64 g mass and 0.013 g m_eq for the wheel alone)
 | Concept | m_eq g | Mass g | Governed by | f₁ / f_rot |
 |---|---|---|---|---|
 | H4 CF rim + Al web/hub | 0.87 | 1.85 | min gauge | 4× |

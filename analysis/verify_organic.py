@@ -22,7 +22,7 @@ from wheelfem import Material
 
 PA12_SLS = Material("SLS PA12 (PA2200)", 1700, 0.40, 930, 42)
 ALLOW = PA12_SLS.strength / 2
-BEAR_M, BEAR_I = 2 * 0.32, 2 * 0.18 * 2.7**2
+BEAR_M, BEAR_I = 0.0, 0.0     # bearings NOT included in mass / inertia (wheel body only); MR63 pair = 0.64 g, 2.62 g mm^2
 
 
 def mesh_stl(stl, h=0.6, h_min=0.25, angle=40):
@@ -144,7 +144,7 @@ def run(stl, setup, h=0.6, h_min=0.25, n_ang=6, buckle=3, log=print, modes=True)
     m = Model3D(P, T, PA12_SLS, extra_mass_g=BEAR_M, extra_Izz=BEAR_I)
     mp = m.mass_props(half=False)
     log(f"mesh: {P.shape[1]} nodes, {T.shape[1]} tets, {m.ndofs} dof [{time.time()-t0:.0f}s]; "
-        f"mass {mp['mass_g']:.3f} g, m_eq {mp['Izz_gmm2'] / s['R']**2:.3f} g (incl. bearings)")
+        f"mass {mp['mass_g']:.3f} g, m_eq {mp['Izz_gmm2'] / s['R']**2:.3f} g (wheel only, no bearings)")
     K = m.stiffness()
     F, names, D = loads(m, s, n_ang)
     U = m.solve(K, F, D)

@@ -44,6 +44,6 @@ for k, (lc, title) in enumerate([("LC4", "LC4 thumb push 20 N"), ("LC7", "LC7 ri
                 title=f"{title}: max principal (MPa), allowable {ALLOW:.0f}", elev=22, azim=-60 if lc != "LC8" else -60)
     f.colorbar(sm, ax=ax, shrink=0.6, pad=0.0)
 f.suptitle(f"Final SLS PA12 rear wheel: closed drum, rim 0.70, faces 0.70 -> 1.12 mm, hub 1.0 mm, 1 mm fillets | "
-           f"m_eq {c['m_eq']:.3f} g, mass {c['mass']:.2f} g (incl. 2 x MR63)", fontsize=11)
+           f"m_eq {c['m_eq']:.3f} g, mass {c['mass']:.2f} g (wheel only, no bearings)", fontsize=11)
 f.tight_layout(); f.savefig("renders3d/pa12_final.png", dpi=130); plt.close(f)
 print("wrote renders3d/")
