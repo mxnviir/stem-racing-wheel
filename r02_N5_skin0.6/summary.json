@@ -1,0 +1,51 @@
+{
+ "name": "r02_N5_skin0.6",
+ "spec": {
+  "name": "r02_N5_skin0.6",
+  "note": "5-fold symmetry (lets the optimiser pick 5/10/15 spokes)",
+  "setup": {
+   "N": 5,
+   "t_rim": 0.6,
+   "rim_zone": 2.5,
+   "h": 0.5,
+   "h_rim": 0.15,
+   "rf": 1.2,
+   "iters": 220,
+   "lcs": [
+    "press",
+    "pinch"
+   ],
+   "n_phi": 14
+  },
+  "t_min": 0.6,
+  "verify_h": 0.8,
+  "verify_step_deg": 1.0
+ },
+ "optimise": {
+  "iterations": 117,
+  "final": {
+   "it": 116,
+   "beta": 16.0,
+   "meq": 1.0607376638078023,
+   "mass": 1.4346341736134849,
+   "smax": 18.86009778174618,
+   "G": 18.951256609179552,
+   "grey": 0.01737999848522661,
+   "worst": "press@0"
+  },
+  "minutes": 262.56341481606165
+ },
+ "extract": {
+  "triangles": 443031,
+  "shells": 99,
+  "cavities": 98,
+  "loose_bodies": 0,
+  "watertight": false,
+  "volume_mm3": 1841.5916181090608,
+  "mass_g": 1.7126802048414265,
+  "min_wall_added_g": 0.18927918,
+  "wall_p1_mm": 0.7247729051895748,
+  "wall_median_mm": 0.7992200724180154,
+  "holes": []
+ }
+}
