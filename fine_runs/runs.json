@@ -107,6 +107,28 @@
    "verify_step_deg": 1.0
   },
   {
+   "name": "r05b_N6_skin0.4_s14",
+   "note": "r05 with the optimiser stress target lowered 18.9 -> 14.0 MPa: r05 converged at m_eq 0.885 g but the full check read 1.27 x allowable (0.4 mm walls on a 0.5 mm grid: the optimiser under-reads the peak by ~27 %)",
+   "setup": {
+    "N": 6,
+    "t_rim": 0.4,
+    "rim_zone": 2.5,
+    "h": 0.5,
+    "h_rim": 0.15,
+    "rf": 0.9,
+    "iters": 220,
+    "lcs": [
+     "press",
+     "pinch"
+    ],
+    "n_phi": 12
+   },
+   "t_min": 0.4,
+   "verify_h": 0.7,
+   "verify_step_deg": 1.0,
+   "sigma_target": 14.0
+  },
+  {
    "name": "r06_N6_skin0.6_h0.4",
    "note": "mesh-refinement check of r01 (needs ~16 GB RAM, slow) - needs ~20 GB RAM: run locally, not on a standard GitHub runner",
    "setup": {

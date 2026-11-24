@@ -33,6 +33,7 @@ jobs:
           - r03_N4_skin0.6
           - r04_N8_skin0.6
           - r05_N6_skin0.4
+          - r05b_N6_skin0.4_s14
           - r07_N6_AMXrigid_0.3
           # r06_N6_skin0.7_h0.4 needs ~20 GB RAM: run it on a bigger machine, not a standard runner
 
