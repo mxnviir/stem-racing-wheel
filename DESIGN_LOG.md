@@ -107,3 +107,16 @@ Reference result (coarse grid, `fine_runs/reference/`): organic branching spokes
 (parametric drum 1.357 g / 2.19 g), max stress 0.72 x allowable (mesh-checked), buckling >= 6.1, f1 1015 Hz,
 walls >= 0.70 mm. Load angles must be sampled finely: 20 deg spacing over-fitted (1.38 x allowable between angles).
 Fine runs: `fine_runs/` (GitHub Actions workflow `.github/workflows/fine-runs.yml`).
+
+### Stage 6 — fine run r02 verified (PA12, N 5, 0.6 mm)
+- After fixing the extraction (the rim skin stays at its exact 0.6 mm; tiny voids are filled; the min-wall field is smoothed),
+  r02 is a single watertight shell.
+- Full P2 check, rolling every 1°:
+  - m_eq 1.075 g, mass 1.46 g
+  - stress ratio 0.80 (pinch)
+  - buckling 5.7
+  - f1 1080 Hz
+- That is 11 % lower m_eq than the coarse reference (1.202 g).
+- Topology: a thin central web (diaphragm), not discrete spokes.
+- The resin run r07 (0.3 mm) was still optimising at its last checkpoint. That checkpoint geometry is a hollow two-wall box
+  (m_eq ≈ 1.06 g). Its final result is pending on GitHub Actions.

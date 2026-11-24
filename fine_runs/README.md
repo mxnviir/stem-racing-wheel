@@ -160,6 +160,22 @@ How it got there:
 
 The fine runs use a finer grid and loads every ~10° from the start; if one still fails, lower `sigma_target`.
 
+## Fine result: r02 (N 5, PA12, 0.6 mm skin and min wall) — passes, best so far
+
+Optimised on GitHub Actions (117 iterations, loads every 5°). Extracted and checked here with the
+rim skin kept at its exact thickness. Files are in `results_verified/r02_N5_skin0.6/`.
+
+| m_eq (wheel only) | mass | max stress / allowable (rolling, every 1°) | buckling | f1 | wall p1 |
+|---|---|---|---|---|---|
+| **1.075 g** (coarse reference 1.202 g, parametric drum 1.357 g) | 1.46 g | **0.80** (pinch@21) | 5.7 | 1080 Hz | 0.59 mm |
+
+On the fine grid with N 5, the optimiser converged to a **single thin central web**: a near-axisymmetric
+diaphragm with a thickened bearing seat. It did not grow discrete spokes. Under radial press and pinch,
+a continuous web costs less inertia than spokes at this wall thickness.
+
+The resin run (r07, Accura AMX, 0.3 mm) was at iteration 134 at its last checkpoint and is not yet final.
+There, the optimiser formed a hollow box of two ~0.45 mm side walls (m_eq ≈ 1.06 g at the checkpoint).
+
 ## Rim thickness vs process — read this
 
 The rim skin can't be thinner than the process's minimum printable wall. Extraction forces every wall,
