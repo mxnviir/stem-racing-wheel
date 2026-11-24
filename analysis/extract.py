@@ -66,7 +66,10 @@ def enforce_min_thickness(phi, axes, s, voxel, t_min):
     mx = ndimage.maximum_filter(din, size=3)
     ridge = solid & (din >= mx - 1e-9) & (din > 0)
     d_ridge = ndimage.distance_transform_edt(~ridge).astype(np.float32) * voxel
-    phi2 = np.maximum(phi, (t_min / 2 + voxel) - d_ridge)          # + 1 voxel: smoothing/voxel margin
+    # balls of diameter t_min (+1 voxel margin) on the medial surface; the voxel distance map is stepped and
+    # leaves exact zeros that marching cubes turns into open, zero-volume slivers -> smooth it slightly
+    ball = ndimage.gaussian_filter((t_min / 2 + voxel) - d_ridge, 0.7)
+    phi2 = np.maximum(phi, ball)
     xs, ys, zs = axes
     X, Y, Z = np.meshgrid(xs, ys, zs, indexing="ij")
     rr = np.hypot(X, Y)
