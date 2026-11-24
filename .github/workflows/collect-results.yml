@@ -1,0 +1,52 @@
+name: Collect fine-run results
+
+# Gathers the newest "<run>-results" artifact of every run name across ALL workflow runs and commits the
+# small files (summary, log, render, density field; no STLs) to the fine-run-results branch, merging with
+# what is already there. Safe to trigger any time, e.g. while other fine runs are still going.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download the newest artifact of every run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          mkdir -p /tmp/res
+          gh api --paginate "repos/${{ github.repository }}/actions/artifacts?per_page=100" \
+            --jq '.artifacts[] | select(.expired == false) | select(.name | endswith("-results")) |
+                  select(.name != "all-fine-run-results") | "\(.name) \(.workflow_run.id) \(.created_at)"' \
+            | sort -k1,1 -k3,3r | awk '!seen[$1]++' > /tmp/latest.txt
+          cat /tmp/latest.txt
+          while read -r NAME RUN_ID CREATED; do
+            RUN="${NAME%-results}"
+            mkdir -p "/tmp/dl/$RUN"
+            gh run download "$RUN_ID" -R "${{ github.repository }}" -n "$NAME" -D "/tmp/dl/$RUN" || continue
+            mkdir -p "/tmp/res/$RUN"
+            for f in summary.json log.txt wheel.png density.npz; do
+              [ -f "/tmp/dl/$RUN/$f" ] && cp "/tmp/dl/$RUN/$f" "/tmp/res/$RUN/"
+            done
+            echo "$RUN: artifact from run $RUN_ID ($CREATED)" >> /tmp/res/SOURCES.txt
+          done < /tmp/latest.txt
+
+      - name: Merge into the fine-run-results branch
+        run: |
+          set -e
+          git clone -q --depth 1 --branch fine-run-results \
+            "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" /tmp/branch \
+            || { mkdir -p /tmp/branch && cd /tmp/branch && git init -q -b fine-run-results \
+                 && git remote add origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"; }
+          cd /tmp/branch
+          cp -r /tmp/res/. .
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Collected fine-run results (workflow run ${{ github.run_id }})" || echo "nothing new"
+          git push -q origin HEAD:fine-run-results

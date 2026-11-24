@@ -243,11 +243,16 @@ jobs:
             d="${d%/}"; mkdir -p "/tmp/res/$d"
             cp "$d"/summary.json "$d"/log.txt "$d"/wheel.png "$d"/density.npz "/tmp/res/$d/" 2>/dev/null || true
           done
-          cd /tmp/res
-          git init -q -b fine-run-results
+          REPO_URL="https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
+          git clone -q --depth 1 --branch fine-run-results "$REPO_URL" /tmp/branch \
+            || { mkdir -p /tmp/branch && cd /tmp/branch && git init -q -b fine-run-results && git remote add origin "$REPO_URL"; }
+          cd /tmp/branch
+          cp -r /tmp/res/. .
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          printf "Results of workflow run ${{ github.run_id }} (commit ${{ github.sha }})\n" > RUN.txt
-          git add -A && git commit -q -m "Fine-run results from workflow run ${{ github.run_id }}"
-          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" \
-            fine-run-results:fine-run-results
+          git add -A
+          git commit -q -m "Fine-run results from workflow run ${{ github.run_id }}" || echo "nothing new"
+          for i in 1 2 3; do   # merge with concurrent collectors instead of overwriting them
+            git push -q origin HEAD:fine-run-results && break
+            git pull -q --rebase -X theirs origin fine-run-results || true
+          done
