@@ -22,6 +22,23 @@ Loads, as agreed: **radial press and diametral pinch only, 20 N, full width**. T
 loads. Edit `"lcs"` in `runs.json` to change that: the available cases are `press`, `pinch`, `press_e0`,
 `press_eW`, `pinch_e0`, `lip0` and `lipW`.
 
+## Minimum wall: 0.6 mm by default (SLS PA12)
+
+0.6 mm is the thinnest printable vertical SLS PA12 wall in the published guides:
+- [Formlabs Fuse](https://formlabs.com/support/Design-specifications-for-3D-models-Fuse-1/): 0.6 mm
+- [Stratasys](https://stratasys.com/uk/stratasysdirect/resources/articles/ls-design-tips-wall-thickness): 0.6 mm possible, 0.8 mm recommended
+- [Murtfeldt](https://murtfeldt.de/en-GB/Additive-manufacturing/Design-tips/): > 0.6 mm
+- service bureaus quote 0.7–1.0 mm for reliability ([Xometry](https://xometry.eu/en/?p=1593), [Protolabs](https://3dhubs.com/knowledge-base/designing-parts-sls-3d-printing), [Materialise](https://www.materialise.com/en/manufacturing/materials/pa-12-sls))
+
+The rim is a vertical wall when the wheel prints lying flat. The fixed rim skin and the minimum wall on the
+output geometry are therefore both 0.6 mm by default, with filter radius `rf` = 1.2 mm (about 2 × the
+minimum). Raise `t_rim`/`t_min` in `runs.json` if your printer or bureau needs more.
+
+**The rim thickens itself where needed.** Only the 0.6 mm skin is fixed. The 2.5 mm band inside it
+(`rim_zone`, meshed at 0.15 mm) is design space, so the optimiser chooses the rim thickness at every angle
+and every position across the width. In the reference result (`reference/rim_thickness.png`), 93 % of the
+rim stays at the skin thickness. The other 7 % grows into 1–3 mm pads exactly where the spokes join.
+
 ## Loads: the wheel rolling on flat ground
 
 The 20 N radial press and the 20 N diametral pinch are applied at every position the wheel can roll into.
@@ -150,7 +167,7 @@ including the skin, to at least `t_min`. A full-width rim at R = 14.1 has m_eq o
 
 | rim skin | rim m_eq on its own |
 |---|---|
-| 0.7 mm (SLS PA12) | 0.92 g, the floor for r01–r04 |
+| 0.6 mm (SLS PA12, default) | 0.79 g, the floor for r01–r04 |
 | 0.4 mm | 0.54 g |
 | 0.25 mm | 0.35 g |
 

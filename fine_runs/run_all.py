@@ -104,7 +104,7 @@ def run_one(spec, smoke=False, verify=True):
         json.dump(summary, open(summary_f, "w"), indent=1, default=float)
     # 2. extract the geometry
     if "extract" not in summary:
-        summary["extract"] = do_extract(npz, stl, spec.get("t_min", 0.7), 0.15 if not smoke else 0.3, log)
+        summary["extract"] = do_extract(npz, stl, spec.get("t_min", 0.6), 0.15 if not smoke else 0.3, log)
         json.dump(summary, open(summary_f, "w"), indent=1, default=float)
     # 3. full-accuracy verification of the real geometry
     if summary["extract"].get("loose_bodies", 0):

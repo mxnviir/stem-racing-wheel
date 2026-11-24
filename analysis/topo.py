@@ -43,7 +43,8 @@ class Setup:
     r_bore: float = 3.0
     r_hub: float = 4.0                       # bearing-holder outer radius (hub wall 1.0)
     seats: tuple = ((6.1, 11.1),)            # bearing seats (fixed bore) and the non-design hub length
-    t_rim: float = 0.7                       # thin non-design rim skin (the optimiser thickens it inwards)
+    t_rim: float = 0.6                       # thin non-design rim skin = SLS minimum wall; the optimiser thickens
+                                             # the rim inwards, locally, wherever the loads need it (rim_zone band)
     rim_zone: float = 2.5                    # radial band inside the rim meshed finer so its thickness can vary
     h_rim: float = 0.2                       # element size in that band
     E: float = 1700.0
@@ -51,7 +52,7 @@ class Setup:
     rho: float = 930.0                       # kg/m^3
     N: int = 6                               # cyclic symmetry order
     h: float = 0.45                          # target element size, mm
-    rf: float = 0.9                          # filter radius, mm
+    rf: float = 1.2                          # filter radius, mm (~2 x minimum wall keeps features >= t_min)
     F: float = 20.0                          # handling load, N
     edge: float = 3.0                        # edge band width, mm
     n_phi: int = 3                           # load angles per sector

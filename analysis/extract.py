@@ -166,7 +166,7 @@ if __name__ == "__main__":
     voxel = float(sys.argv[3]) if len(sys.argv) > 3 else 0.12
     s, r, z, nt, rho = load(npz)
     phi, axes = field(s, r, z, nt, rho, voxel)
-    t_min = float(sys.argv[5]) if len(sys.argv) > 5 else 0.7
+    t_min = float(sys.argv[5]) if len(sys.argv) > 5 else 0.6       # SLS PA12 minimum wall
     if t_min > 0:
         phi = enforce_min_thickness(phi, axes, s, voxel, t_min)
     if len(sys.argv) > 4 and sys.argv[4] not in ("", "0", "none"):   # holes n,d,r_h (cut after thickening)
