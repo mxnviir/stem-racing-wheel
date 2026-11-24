@@ -35,6 +35,9 @@ def do_extract(npz, stl, t_min, voxel, log):
     phi = extract.enforce_min_thickness(phi0, axes, s, voxel, t_min) if t_min > 0 else phi0
     added = float(((phi > 0) & ~(phi0 > 0)).sum() * voxel**3 * s["rho"] * 1e-6)   # g added by the min-wall rule
     log(f"min-wall rule added {added:.3f} g ({'OK' if added < 0.05 * max(1e-9, float((phi0 > 0).sum() * voxel**3 * s['rho'] * 1e-6)) else 'LARGE: optimiser features thinner than t_min, raise rf'})")
+    phi, n_small, v_small = extract.fill_small_voids(phi, axes, s)
+    if n_small:
+        log(f"filled {n_small} tiny enclosed voids ({v_small:.2f} mm^3 in total)")
     m = extract.snap(extract.surface(phi, axes), s)
     holes = None
     if m.metadata.get("n_cavities", 0) > 0:             # enclosed cavity: SLS powder cannot get out
@@ -117,8 +120,14 @@ def run_one(spec, smoke=False, verify=True):
         h = spec.get("verify_h", 0.6) if not smoke else 1.2
         n_ang = max(2, int(round(360.0 / s["N"] / spec.get("verify_step_deg", 1.0))))   # rolling sweep
         log(f"verification: load every {360.0 / s['N'] / n_ang:.2f} deg across the sector ({n_ang} positions)")
-        summary["verify"] = verify_organic.run(stl, s, h=h, h_min=min(0.25, h / 2), n_ang=n_ang if not smoke else 2,
-                                               buckle=3 if not smoke else 0, log=log, modes=not smoke)
+        try:
+            vres = verify_organic.run(stl, s, h=h, h_min=min(0.25, h / 2), n_ang=n_ang if not smoke else 2,
+                                       buckle=3 if not smoke else 0, log=log, modes=not smoke)
+        except Exception as e:                      # record it instead of failing silently
+            import traceback
+            log("verification FAILED: " + repr(e) + "\n" + traceback.format_exc())
+            raise
+        summary["verify"] = vres
         json.dump(summary, open(summary_f, "w"), indent=1, default=float)
     # 4. render
     png = os.path.join(d, "wheel.png")

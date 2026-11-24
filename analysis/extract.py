@@ -73,6 +73,25 @@ def enforce_min_thickness(phi, axes, s, voxel, t_min):
     return np.minimum.reduce([phi2, s["R"] - rr, rr - s["r_bore"], Z, s["W"] - Z])
 
 
+def fill_small_voids(phi, axes, s, v_max=2.0):
+    """Enclosed voids smaller than v_max mm^3 (tiny bubbles left by the density field) are filled:
+    they cannot be de-powdered, carry nothing, and make the surface non-watertight. Returns (phi, n, mm3)."""
+    xs, ys, zs = axes
+    vox = (xs[1] - xs[0]) * (ys[1] - ys[0]) * (zs[1] - zs[0])
+    X, Y, Z = np.meshgrid(xs, ys, zs, indexing="ij")
+    rr = np.hypot(X, Y)
+    inside = (rr < s["R"]) & (rr > s["r_bore"]) & (Z > 0) & (Z < s["W"])
+    void = (phi <= 0) & inside
+    lab, nlab = ndimage.label(void)
+    outer = set(np.unique(lab[~ndimage.binary_erosion(inside, iterations=1) & void]).tolist()) - {0}
+    sizes = ndimage.sum(np.ones_like(lab), lab, index=np.arange(1, nlab + 1))
+    small = [k for k in range(1, nlab + 1) if k not in outer and sizes[k - 1] * vox < v_max]
+    if small:
+        mask = np.isin(lab, small)
+        phi = np.where(mask, np.abs(phi) + 0.5 * (xs[1] - xs[0]), phi)
+    return phi, len(small), float(sum(sizes[k - 1] for k in small) * vox)
+
+
 def cavity_holes(phi, axes, s, n=2, d=3.0):
     """Find enclosed cavities (void not connected to the outside) and drill n axial powder holes of
     diameter d from the inner face (z = W) to each cavity, at the cavity's radius. Returns (phi, info)."""
