@@ -1,0 +1,83 @@
+[00:04:18] === r01b_N6_skin0.6: baseline SLS PA12, 6-fold symmetry | continues r01 from its iteration-101 checkpoint with the fixed (exact) resume | Linux-7.0.0-1020-azure-x86_64-with-glibc2.43, 4 cpus
+[00:04:18] seeded from seeds/r01_it101.npz
+[00:04:24] grid: nr 36 nt 168 nz 37 -> 211680 elements, 671328 dof, 35280 variables, 24 load cases; setup 6s; stress target 18.9 MPa (vM)
+[00:04:24] resuming from iteration 101 (beta 16.0), old checkpoint: tight MMA restart
+[00:06:46] it 101 beta   16 m_eq 1.184 g (design 0.380) mass 1.713 g | max vM  26.2 MPa (press@40, r 11.7 z 11.8) P-norm  26.2 | grey 0.082 change 0.015 [142s]
+[00:09:07] it 102 beta   16 m_eq 1.195 g (design 0.391) mass 1.718 g | max vM  21.5 MPa (press@0, r 5.8 z 11.8) P-norm  22.4 | grey 0.085 change 0.012 [141s]
+[00:11:28] it 103 beta   16 m_eq 1.187 g (design 0.383) mass 1.715 g | max vM  20.9 MPa (press@10, r 13.0 z 5.4) P-norm  20.9 | grey 0.083 change 0.006 [141s]
+[00:13:49] it 104 beta   16 m_eq 1.195 g (design 0.391) mass 1.729 g | max vM  19.0 MPa (press@50, r 13.0 z 5.4) P-norm  18.8 | grey 0.084 change 0.005 [141s]
+[00:16:10] it 105 beta   16 m_eq 1.194 g (design 0.390) mass 1.726 g | max vM  18.9 MPa (press@50, r 13.0 z 5.4) P-norm  18.9 | grey 0.084 change 0.006 [141s]
+[00:18:29] it 106 beta   16 m_eq 1.193 g (design 0.389) mass 1.725 g | max vM  18.8 MPa (press@50, r 13.0 z 5.4) P-norm  18.8 | grey 0.084 change 0.007 [138s]
+[00:20:49] it 107 beta   16 m_eq 1.192 g (design 0.388) mass 1.722 g | max vM  18.8 MPa (press@25, r 13.0 z 5.4) P-norm  18.8 | grey 0.084 change 0.008 [140s]
+[00:23:10] it 108 beta   16 m_eq 1.191 g (design 0.387) mass 1.720 g | max vM  18.8 MPa (press@25, r 13.0 z 5.4) P-norm  18.8 | grey 0.084 change 0.009 [141s]
+[00:25:29] it 109 beta   16 m_eq 1.189 g (design 0.386) mass 1.717 g | max vM  18.8 MPa (press@35, r 13.0 z 11.8) P-norm  18.8 | grey 0.084 change 0.008 [140s]
+[00:27:51] it 110 beta   16 m_eq 1.189 g (design 0.385) mass 1.715 g | max vM  18.8 MPa (press@25, r 13.0 z 5.4) P-norm  18.8 | grey 0.084 change 0.009 [142s]
+[00:30:09] it 111 beta   16 m_eq 1.187 g (design 0.384) mass 1.712 g | max vM  18.8 MPa (press@25, r 13.0 z 5.4) P-norm  18.8 | grey 0.085 change 0.011 [138s]
+[00:32:23] it 112 beta   16 m_eq 1.186 g (design 0.382) mass 1.709 g | max vM  18.9 MPa (press@25, r 13.0 z 5.4) P-norm  18.9 | grey 0.085 change 0.013 [135s]
+[00:34:47] it 113 beta   16 m_eq 1.185 g (design 0.381) mass 1.705 g | max vM  18.8 MPa (press@25, r 13.0 z 11.8) P-norm  18.8 | grey 0.085 change 0.015 [143s]
+[00:37:05] it 114 beta   16 m_eq 1.183 g (design 0.379) mass 1.701 g | max vM  18.9 MPa (press@25, r 13.0 z 5.4) P-norm  18.9 | grey 0.085 change 0.020 [138s]
+[00:39:26] it 115 beta   16 m_eq 1.181 g (design 0.378) mass 1.695 g | max vM  18.7 MPa (press@25, r 13.0 z 11.8) P-norm  18.8 | grey 0.085 change 0.017 [140s]
+[00:41:44] it 116 beta   16 m_eq 1.179 g (design 0.375) mass 1.693 g | max vM  19.3 MPa (press@35, r 13.0 z 5.4) P-norm  19.2 | grey 0.085 change 0.020 [138s]
+[00:44:04] it 117 beta   16 m_eq 1.176 g (design 0.372) mass 1.674 g | max vM  19.0 MPa (press@30, r 6.8 z 5.4) P-norm  20.1 | grey 0.085 change 0.020 [140s]
+[00:46:23] it 118 beta   16 m_eq 1.156 g (design 0.352) mass 1.654 g | max vM  27.8 MPa (press@35, r 10.2 z 11.8) P-norm  27.2 | grey 0.081 change 0.020 [139s]
+[00:48:41] it 119 beta   16 m_eq 1.165 g (design 0.361) mass 1.656 g | max vM  24.7 MPa (press@5, r 13.0 z 11.8) P-norm  23.8 | grey 0.084 change 0.020 [138s]
+[00:50:56] it 120 beta   16 m_eq 1.170 g (design 0.366) mass 1.672 g | max vM  20.9 MPa (press@5, r 10.2 z 11.8) P-norm  21.1 | grey 0.084 change 0.020 [135s]
+[00:53:13] it 121 beta   16 m_eq 1.170 g (design 0.366) mass 1.666 g | max vM  20.7 MPa (press@5, r 13.0 z 5.4) P-norm  20.5 | grey 0.084 change 0.017 [137s]
+[00:55:31] it 122 beta   16 m_eq 1.173 g (design 0.369) mass 1.676 g | max vM  19.0 MPa (press@35, r 13.0 z 5.4) P-norm  19.1 | grey 0.085 change 0.014 [138s]
+[00:57:48] it 123 beta   16 m_eq 1.173 g (design 0.369) mass 1.674 g | max vM  18.7 MPa (press@10, r 13.0 z 11.8) P-norm  18.8 | grey 0.085 change 0.020 [137s]
+[01:00:01] it 124 beta   16 m_eq 1.172 g (design 0.368) mass 1.673 g | max vM  19.2 MPa (press@35, r 13.0 z 11.8) P-norm  19.0 | grey 0.085 change 0.019 [133s]
+[01:02:12] it 125 beta   16 m_eq 1.172 g (design 0.368) mass 1.672 g | max vM  18.7 MPa (press@50, r 13.0 z 5.4) P-norm  18.8 | grey 0.085 change 0.020 [130s]
+[01:04:22] it 126 beta   16 m_eq 1.171 g (design 0.367) mass 1.670 g | max vM  18.8 MPa (press@35, r 13.0 z 11.8) P-norm  18.9 | grey 0.085 change 0.017 [131s]
+[01:06:41] it 127 beta   16 m_eq 1.170 g (design 0.366) mass 1.668 g | max vM  18.7 MPa (press@35, r 13.0 z 11.8) P-norm  18.8 | grey 0.084 change 0.019 [138s]
+[01:09:04] it 128 beta   16 m_eq 1.169 g (design 0.365) mass 1.666 g | max vM  18.8 MPa (press@10, r 13.0 z 5.4) P-norm  18.8 | grey 0.084 change 0.020 [143s]
+[01:11:26] it 129 beta   16 m_eq 1.168 g (design 0.364) mass 1.664 g | max vM  18.8 MPa (press@35, r 13.0 z 11.8) P-norm  18.8 | grey 0.084 change 0.014 [142s]
+[01:13:50] it 130 beta   16 m_eq 1.167 g (design 0.364) mass 1.662 g | max vM  18.9 MPa (press@40, r 13.0 z 5.4) P-norm  18.9 | grey 0.084 change 0.014 [144s]
+[01:16:14] it 131 beta   16 m_eq 1.167 g (design 0.363) mass 1.660 g | max vM  18.8 MPa (press@10, r 13.0 z 11.8) P-norm  18.8 | grey 0.084 change 0.018 [144s]
+[01:18:35] it 132 beta   16 m_eq 1.166 g (design 0.362) mass 1.658 g | max vM  19.0 MPa (press@5, r 13.0 z 5.4) P-norm  18.9 | grey 0.084 change 0.014 [141s]
+[01:20:50] it 133 beta   16 m_eq 1.165 g (design 0.361) mass 1.654 g | max vM  18.5 MPa (press@35, r 13.0 z 11.8) P-norm  18.7 | grey 0.083 change 0.020 [135s]
+[01:23:11] it 134 beta   16 m_eq 1.162 g (design 0.359) mass 1.654 g | max vM  20.3 MPa (press@5, r 12.8 z 11.8) P-norm  20.0 | grey 0.083 change 0.020 [141s]
+[01:25:32] it 135 beta   16 m_eq 1.158 g (design 0.354) mass 1.633 g | max vM  24.2 MPa (press@5, r 10.2 z 5.4) P-norm  23.8 | grey 0.080 change 0.020 [140s]
+[01:27:50] it 136 beta   16 m_eq 1.153 g (design 0.350) mass 1.632 g | max vM  27.8 MPa (press@35, r 12.8 z 5.4) P-norm  26.5 | grey 0.081 change 0.020 [138s]
+[01:30:06] it 137 beta   16 m_eq 1.150 g (design 0.346) mass 1.616 g | max vM  27.4 MPa (press@40, r 10.2 z 11.8) P-norm  28.1 | grey 0.077 change 0.020 [136s]
+[01:32:22] it 138 beta   16 m_eq 1.167 g (design 0.363) mass 1.653 g | max vM  17.8 MPa (press@5, r 13.0 z 5.4) P-norm  18.6 | grey 0.084 change 0.020 [136s]
+[01:34:38] it 139 beta   16 m_eq 1.163 g (design 0.359) mass 1.651 g | max vM  19.6 MPa (press@35, r 12.8 z 11.8) P-norm  19.4 | grey 0.083 change 0.020 [136s]
+[01:36:58] it 140 beta   16 m_eq 1.164 g (design 0.360) mass 1.647 g | max vM  18.1 MPa (press@5, r 12.8 z 5.4) P-norm  18.6 | grey 0.082 change 0.014 [140s]
+[01:39:18] it 141 beta   16 m_eq 1.162 g (design 0.358) mass 1.645 g | max vM  19.5 MPa (press@35, r 12.8 z 11.8) P-norm  19.2 | grey 0.082 change 0.015 [140s]
+[01:41:38] it 142 beta   16 m_eq 1.162 g (design 0.359) mass 1.645 g | max vM  18.8 MPa (press@10, r 12.8 z 5.4) P-norm  18.8 | grey 0.082 change 0.016 [140s]
+[01:43:56] it 143 beta   16 m_eq 1.162 g (design 0.358) mass 1.643 g | max vM  18.9 MPa (press@10, r 12.8 z 5.4) P-norm  18.9 | grey 0.082 change 0.020 [138s]
+[01:46:12] it 144 beta   16 m_eq 1.161 g (design 0.358) mass 1.642 g | max vM  18.9 MPa (press@25, r 12.8 z 5.4) P-norm  18.9 | grey 0.081 change 0.019 [136s]
+[01:48:29] it 145 beta   16 m_eq 1.161 g (design 0.357) mass 1.641 g | max vM  18.9 MPa (press@35, r 12.8 z 5.4) P-norm  18.9 | grey 0.081 change 0.020 [137s]
+[01:50:47] it 146 beta   16 m_eq 1.161 g (design 0.357) mass 1.639 g | max vM  18.9 MPa (press@55, r 12.8 z 11.8) P-norm  18.9 | grey 0.081 change 0.020 [138s]
+[01:53:08] it 147 beta   16 m_eq 1.160 g (design 0.357) mass 1.639 g | max vM  18.9 MPa (press@35, r 12.8 z 5.4) P-norm  18.9 | grey 0.081 change 0.020 [141s]
+[01:55:23] it 148 beta   16 m_eq 1.160 g (design 0.356) mass 1.638 g | max vM  18.9 MPa (press@5, r 12.8 z 11.8) P-norm  18.9 | grey 0.080 change 0.020 [135s]
+[01:57:39] it 149 beta   16 m_eq 1.160 g (design 0.356) mass 1.637 g | max vM  18.8 MPa (press@40, r 12.8 z 5.4) P-norm  18.9 | grey 0.080 change 0.020 [136s]
+[01:59:59] it 150 beta   16 m_eq 1.159 g (design 0.356) mass 1.635 g | max vM  19.0 MPa (press@5, r 12.8 z 11.8) P-norm  19.0 | grey 0.080 change 0.020 [140s]
+[02:02:20] it 151 beta   16 m_eq 1.159 g (design 0.355) mass 1.635 g | max vM  18.6 MPa (press@40, r 12.8 z 5.4) P-norm  18.9 | grey 0.080 change 0.020 [141s]
+[02:04:45] it 152 beta   16 m_eq 1.156 g (design 0.352) mass 1.627 g | max vM  20.5 MPa (press@5, r 12.8 z 5.4) P-norm  20.3 | grey 0.079 change 0.020 [145s]
+[02:07:11] it 153 beta   16 m_eq 1.156 g (design 0.353) mass 1.632 g | max vM  20.0 MPa (press@5, r 10.2 z 5.4) P-norm  20.1 | grey 0.079 change 0.020 [146s]
+[02:09:30] it 154 beta   16 m_eq 1.154 g (design 0.350) mass 1.624 g | max vM  22.0 MPa (press@5, r 12.8 z 5.4) P-norm  21.4 | grey 0.078 change 0.020 [139s]
+[02:11:45] it 155 beta   16 m_eq 1.159 g (design 0.355) mass 1.634 g | max vM  18.5 MPa (press@35, r 12.8 z 11.8) P-norm  18.9 | grey 0.080 change 0.020 [135s]
+[02:13:59] it 156 beta   16 m_eq 1.157 g (design 0.354) mass 1.632 g | max vM  19.4 MPa (press@5, r 12.8 z 5.4) P-norm  19.3 | grey 0.079 change 0.015 [134s]
+[02:16:15] it 157 beta   16 m_eq 1.158 g (design 0.354) mass 1.633 g | max vM  18.9 MPa (press@25, r 12.8 z 11.8) P-norm  18.9 | grey 0.079 change 0.007 [136s]
+[02:18:29] it 158 beta   16 m_eq 1.158 g (design 0.354) mass 1.633 g | max vM  18.9 MPa (press@55, r 12.8 z 5.4) P-norm  18.9 | grey 0.079 change 0.005 [134s]
+[02:20:40] it 159 beta   16 m_eq 1.158 g (design 0.354) mass 1.633 g | max vM  18.8 MPa (press@10, r 12.8 z 11.8) P-norm  18.9 | grey 0.079 change 0.004 [131s]
+[02:22:54] it 160 beta   16 m_eq 1.158 g (design 0.354) mass 1.632 g | max vM  18.8 MPa (press@55, r 12.8 z 5.4) P-norm  18.9 | grey 0.079 change 0.005 [133s]
+[02:25:10] it 161 beta   16 m_eq 1.158 g (design 0.354) mass 1.632 g | max vM  18.9 MPa (press@55, r 12.8 z 5.4) P-norm  18.9 | grey 0.079 change 0.005 [136s]
+[02:27:26] it 162 beta   16 m_eq 1.157 g (design 0.354) mass 1.632 g | max vM  18.9 MPa (press@40, r 12.8 z 5.4) P-norm  18.9 | grey 0.079 change 0.006 [136s]
+[02:29:43] it 163 beta   16 m_eq 1.157 g (design 0.353) mass 1.631 g | max vM  18.9 MPa (press@40, r 12.8 z 5.4) P-norm  18.9 | grey 0.079 change 0.006 [137s]
+[02:32:02] it 164 beta   16 m_eq 1.157 g (design 0.353) mass 1.631 g | max vM  18.9 MPa (press@40, r 12.8 z 5.4) P-norm  18.9 | grey 0.079 change 0.009 [139s]
+[02:32:02] converged
+[02:32:04] min-wall rule added 0.245 g (LARGE: optimiser features thinner than t_min, raise rf)
+[02:32:08] closed cavity found -> powder holes (2 x dia 3.0 from the inner face) [{'r': 9.95, 'depth': 6.55, 'voxels': 829384}]; cavities now 0 (open)
+[02:32:24] extract: {'triangles': 560264, 'shells': 1, 'cavities': 0, 'loose_bodies': 0, 'watertight': True, 'volume_mm3': 1962.4670841176733, 'mass_g': 1.8250943882294361, 'min_wall_added_g': 0.24512381999999994, 'wall_p1_mm': 0.5980480052677476, 'wall_median_mm': 0.7976630582411455, 'holes': [{'r': 9.95, 'depth': 6.55, 'voxels': 829384}]}
+[02:32:24] verification: load every 1.00 deg across the sector (60 positions)
+[02:32:52] material: SLS PA12 (PA2200): E 1700 MPa, nu 0.4, rho 930 kg/m3, UTS 42.0 MPa -> allowable 21.0 MPa
+[02:32:53] mesh: 15331 nodes, 46778 tets, 277767 dof [29s]; mass 1.826 g, m_eq 1.253 g (wheel only, no bearings)
+[02:34:12] stress: q_max 0.527 (pinch@49); next: pinch@48 0.52, pinch@50 0.52, pinch@42 0.52, pinch@56 0.52, pinch@43 0.52
+[02:34:12] running stiffness 0.95..1.02 um/N over the sector (spoke-passing ripple 8 %)
+[02:35:06] buckling pinch@49: lambda_1 = 17.26
+[02:35:59] buckling pinch@48: lambda_1 = 17.24
+[02:36:53] buckling pinch@50: lambda_1 = 17.28
+[02:37:26] natural frequencies (Hz): 1589, 2342, 2349, 3750, 6248, 6254 (rotation 333 Hz)
+[02:37:26] done [302s]
+[02:37:35] === r01b_N6_skin0.6 done
