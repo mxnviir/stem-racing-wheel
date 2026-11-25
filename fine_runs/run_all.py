@@ -169,14 +169,19 @@ def write_table():
 if __name__ == "__main__":
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     smoke, verify = "--smoke" in sys.argv, "--no-verify" not in sys.argv
-    if "--reference" in sys.argv:          # install check of extract + verify on a shipped converged design
+    if "--reference" in sys.argv:          # install check of the verification stage on a shipped STL
         import shutil
         ref = os.path.join(HERE, "reference")
-        d = os.path.join(RESULTS, "reference_check"); os.makedirs(d, exist_ok=True)
+        d = os.path.join(RESULTS, "reference_check")
+        shutil.rmtree(d, ignore_errors=True); os.makedirs(d)
         shutil.copy(os.path.join(ref, "density.npz"), os.path.join(d, "density.npz"))
+        # verify the shipped STL itself (the geometry the reference numbers belong to); re-extracting the density
+        # field with today's extract.py gives a different, lighter wheel, so it would not test the install
+        shutil.copy(os.path.join(ref, "organic_wheel_r01.stl"), os.path.join(d, "wheel.stl"))
         rs = json.load(open(os.path.join(ref, "summary.json")))
         spec = dict(rs["spec"], name="reference_check", verify_h=1.2)
-        json.dump(dict(name="reference_check", spec=spec, optimise=rs["optimise"]), open(os.path.join(d, "summary.json"), "w"))
+        json.dump(dict(name="reference_check", spec=spec, optimise=rs["optimise"], extract=rs["extract"]),
+                  open(os.path.join(d, "summary.json"), "w"))
         out = run_one(spec)
         a, b = out.get("verify", {}), rs.get("verify", {})
         print(f"reference (h {rs['spec'].get('verify_h')}): m_eq {b.get('m_eq_g', float('nan')):.3f} g, stress ratio "
