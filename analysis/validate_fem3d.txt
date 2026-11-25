@@ -1,0 +1,5 @@
+(A) ring pinch, b = 1.0: Winkler outer 117.35, inner -124.26 MPa
+    h=0.50 dofs    8205: peak vM / Winkler 1.001   pinch dD / Roark 0.999
+    h=0.35 dofs   25080: peak vM / Winkler 1.006   pinch dD / Roark 1.000
+    h=0.25 dofs   52938: peak vM / Winkler 1.005   pinch dD / Roark 1.000
+    h=0.18 dofs  106440: peak vM / Winkler 1.005   pinch dD / Roark 1.000

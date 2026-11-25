@@ -151,7 +151,7 @@ branching spokes** between the hub and the thin rim (`reference/wheel.png`). Pri
 
 | m_eq (wheel only) | mass (wheel only) | max stress / allowable | buckling | f1 | min wall |
 |---|---|---|---|---|---|
-| **1.202 g** (parametric drum: 1.357 g) | 1.53 g | **0.72** (0.73 at h 1.0, 0.72 at h 0.8) | ≥ 6.1 | 1015 Hz | no ray < 0.70 mm (60k rays) |
+| **1.202 g** | 1.53 g | **0.72** (0.73 at h 1.0, 0.72 at h 0.8) | ≥ 6.1 | 1015 Hz | no ray < 0.70 mm (60k rays) |
 
 How it got there:
 - **Load spacing.** A first attempt with loads every 20° failed (1.38) at the angles between the sampled ones.
@@ -167,7 +167,7 @@ rim skin kept at its exact thickness. Files are in `results_verified/r02_N5_skin
 
 | m_eq (wheel only) | mass | max stress / allowable (rolling, every 1°) | buckling | f1 | wall p1 |
 |---|---|---|---|---|---|
-| **1.075 g** (coarse reference 1.202 g, parametric drum 1.357 g) | 1.46 g | **0.80** (pinch@21) | 5.7 | 1080 Hz | 0.59 mm |
+| **1.075 g** (coarse reference 1.202 g) | 1.46 g | **0.80** (pinch@21) | 5.7 | 1080 Hz | 0.59 mm |
 
 On the fine grid with N 5, the optimiser converged to a **single thin central web**: a near-axisymmetric
 diaphragm with a thickened bearing seat. It did not grow discrete spokes. Under radial press and pinch,
@@ -190,7 +190,6 @@ Headline figure: **moment of inertia I about the axle, in g·mm²** (wheel only,
 | r01b N6, 0.6 mm | 249 | 1.83 g | 0.53 | 17.3 | 1589 Hz | 0.25 g | pass, heavy (clean resume, converged at 164) |
 | r07 resin, 0.3 mm | ≈211 (checkpoint) | ≈1.60 g | — | — | — | — | its resume diverged → continued as **r07b** |
 | *coarse reference (spoked)* | *239* | 1.53 g | 0.72 | 6.1 | 1015 Hz | — | pass |
-| *parametric drum* | *270* | — | — | — | — | — | baseline |
 
 - **r03/r04:** the optimiser drew features thinner than 0.6 mm. The min-wall rule then added 0.23–0.27 g at extraction,
   which makes both wheels heavy and over-strong. Even before that rule ran, their m_eq (1.15 g) was above r02's,

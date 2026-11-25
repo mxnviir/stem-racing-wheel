@@ -1,6 +1,6 @@
 """
-fem3d: linear elasticity on quadratic tetrahedra (10-node, P2 displacement on straight-sided tets
-from geom3d), for wheels of arbitrary 3D shape (spokes, variable rim thickness, fillets).
+fem3d: linear elasticity on quadratic tetrahedra (10-node, P2 displacement on straight-sided tets),
+used to verify the optimised (organic) wheels from their STL.
 
 * Assembly: shape-function gradients from scikit-fem, B (6 x 30) per quadrature point, batched matmul,
   CSR accumulation in chunks. Stiffness with the 4-point rule (exact for affine P2), mass with order 4.
@@ -15,7 +15,29 @@ import numpy as np
 import scipy.sparse as sp
 import scipy.sparse.linalg as spla
 from skfem import MeshTet, Basis, FacetBasis, ElementTetP2, LinearForm, Functional, asm
-from wheelfem import Material
+from dataclasses import dataclass
+
+
+@dataclass
+class Material:
+    name: str
+    E: float        # MPa
+    nu: float
+    rho: float      # kg/m^3
+    strength: float # MPa (UTS for polymers)
+
+    @property
+    def rho_t(self):
+        return self.rho * 1e-12
+
+    def C(self):
+        E, nu = self.E, self.nu
+        lam = E * nu / ((1 + nu) * (1 - 2 * nu)); mu = E / (2 * (1 + nu))
+        C = np.zeros((6, 6))
+        C[:3, :3] = lam
+        C[[0, 1, 2], [0, 1, 2]] += 2 * mu
+        C[[3, 4, 5], [3, 4, 5]] = mu
+        return C
 
 
 def _Bmat(G):

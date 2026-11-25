@@ -17,8 +17,7 @@ Full-accuracy check of an optimised (organic) wheel from its STL.
 """
 import sys, json, time
 import numpy as np
-from fem3d import Model3D, _vm_s1
-from wheelfem import Material
+from fem3d import Model3D, _vm_s1, Material
 
 PA12_SLS = Material("SLS PA12 (PA2200)", 1700, 0.40, 930, 42)
 ALLOW = PA12_SLS.strength / 2

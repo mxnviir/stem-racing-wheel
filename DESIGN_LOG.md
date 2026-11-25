@@ -1,5 +1,9 @@
 # STEM Racing Pro wheel — design log
 
+> **2026-11-25: the parametric pipeline (stages 2–5: `wheelfem.py`, `concepts.py`, `size.py`, `geom3d.py`, `lc3d.py`,
+> `pa12*.py` and their outputs) was removed; only the organic pipeline (stage 6) is kept.** Those stages are kept here
+> as history; the code is in git history up to commit aa365f0.
+
 ## Regulation envelope (2026-27 Pro Tech Regs)
 | Rule | Requirement | Target (margin) |
 |---|---|---|

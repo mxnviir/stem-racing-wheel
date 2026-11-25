@@ -1,16 +1,11 @@
 """
-Verification of the 3D tetrahedral pipeline (geom3d + fem3d + lc3d).
-
-(A) Thin ring pinch (Ro 14.1, t 0.5, b 1 mm, Al), half model: section stress at 90 deg from the loads
-    vs Winkler curved-beam theory, under mesh refinement (tests P2-tet bending and stress recovery).
-(B) Cross-solver check: the same axisymmetric PA12 web wheel (no fillets) on the tet pipeline and on
-    the validated hex pipeline (wheelfem/concepts): deflections for every load case.
-Writes verify3d.txt.
+Validation of the P2-tet solver (fem3d) used by verify_organic: thin ring pinch (Ro 14.1, t 0.5, b 1 mm, Al),
+half model, section stress at 90 deg from the loads vs Winkler curved-beam theory and diameter change vs
+Roark, under mesh refinement. Writes validate_fem3d.txt.
 """
 import sys, time
 import numpy as np
-from wheelfem import Material
-from fem3d import Model3D
+from fem3d import Model3D, Material
 
 Al = Material("Al", 71700, 0.33, 2810, 503)
 
@@ -66,35 +61,8 @@ def check_ring(log):
         log(f"    h={h:.2f} dofs {m.ndofs:7d}: peak vM / Winkler {s['vm'] / ref:.3f}   pinch dD / Roark {dD / dD_th:.3f}")
 
 
-def check_cross(log):
-    import concepts as C
-    from geom3d import Wheel, SpokeSet, build
-    from lc3d import run
-    tr, tw, th_ = 0.9, 1.4, 0.9
-    d = C.web("x", tr, tw, th_, 0, 0, 0, [C.PA12])
-    hx = C.run(d)
-    g = Wheel(name="web", rim_t=[(0, tr), (C.W, tr)], t_hub=th_, hub_z=(C.W / 2 - 3, C.W / 2 + 3),
-              seats=[(C.W / 2 - 2.5, C.W / 2 + 2.5)], spokes=[SpokeSet(N=0, zc=C.W / 2, ts_hub=tw, ts_rim=tw)], rf=0.0)
-    log(f"(B) PA12 web rim {tr} / web {tw} / hub {th_} mm, no fillets: hex (validated) vs tet")
-    log(f"    {'h':>5} {'dofs':>8} | {'run c':>7} {'run e':>7} {'pinch':>7} {'spin':>6} {'edgeP':>7} {'edgePin':>8} {'lip':>7} | mass m_eq")
-    log(f"    {'hex':>5} {hx['ndofs']:8d} | {hx['LC1_um_per_N']:7.3f} {hx['LC1_edge_um_per_N']:7.3f} {hx['LC3_dD_um']:7.1f} "
-        f"{hx['LC5_dD_um']:6.2f} {hx['LC6_edge_um']:7.1f} {hx['LC7_dD_edge_um']:8.1f} {hx['LC8_lip_um']:7.1f} | "
-        f"{hx['mass_g'] - C.BEAR_M:.3f} {(hx['Izz_gmm2'] - C.BEAR_I) / C.R**2:.3f}")
-    for h, hl in ((1.4, 0.6), (1.0, 0.45)):
-        P, T, _ = build(g, h=h, h_load=hl)
-        m = Model3D(P, T, C.PA12)
-        r = run(g, m)
-        log(f"    {h:5.2f} {m.ndofs:8d} | {r['LC1_um_per_N']:7.3f} {r['LC1_edge_um_per_N']:7.3f} {r['LC3_dD_um']:7.1f} "
-            f"{r['LC5_dD_um']:6.2f} {r['LC6_edge_um']:7.1f} {r['LC7_dD_edge_um']:8.1f} {r['LC8_lip_um']:7.1f} | "
-            f"{r['mass_g']:.3f} {r['m_eq_g']:.3f}")
-
-
 if __name__ == "__main__":
-    fh = open("verify3d.txt", "w")
+    fh = open("validate_fem3d.txt", "w")
     def log(s):
         print(s, flush=True); fh.write(s + "\n"); fh.flush()
-    which = sys.argv[1:] or ["A", "B"]
-    if "A" in which:
-        check_ring(log)
-    if "B" in which:
-        check_cross(log)
+    check_ring(log)
