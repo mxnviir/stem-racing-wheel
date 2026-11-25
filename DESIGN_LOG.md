@@ -140,3 +140,10 @@ Fine runs: `fine_runs/` (GitHub Actions workflow `.github/workflows/fine-runs.ym
   - Now saved and restored; a stop/resume equals the uninterrupted run (max |Δx| = 0).
   - r01b and r07b continue from the last healthy checkpoints (`fine_runs/seeds/`).
   - r03 and r04 were also hit by the bug, but at the iterations where they resumed their designs were already heavier than r02, so they were not re-run.
+- r01b (continuing from iteration 101 with the tight restart):
+  - resumed cleanly (peak 27.8 MPa, no blow-up) and converged at iteration 164
+  - full check: m_eq 1.253 g, stress ratio 0.53, buckling 17.3, f1 1589 Hz
+- r01b is the third 0.6 mm run (with r03 and r04) where the optimiser left features thinner than 0.6 mm. The min-wall rule then added
+  about 0.25 g, so the wheel came out heavy and over-strong. Only r02 avoided this. The filter radius (rf 1.2 on a 0.5 mm grid)
+  does not hold the 0.6 mm minimum inside the optimiser.
+- r07b's first job was lost when its runner stopped responding (no checkpoint); re-dispatched from the seed.

@@ -185,6 +185,7 @@ There, the optimiser formed a hollow box of two ~0.45 mm side walls (m_eq ≈ 1.
 | r04 N8, 0.6 mm | 1.247 g | 1.79 g | 0.63 | 13.5 | 1617 Hz | 0.23 g | pass, heavy (iteration cap) |
 | r05 N6, 0.4 mm | 0.885 g | 1.25 g | **1.27** | 3.1 | 436 Hz | 0 g | FAIL: stress (pinch) |
 | r01 N6, 0.6 mm | — | — | — | — | — | — | runner lost at iteration 104 → continued as **r01b** |
+| r01b N6, 0.6 mm | 1.253 g | 1.83 g | 0.53 | 17.3 | 1589 Hz | 0.25 g | pass, heavy (clean resume, converged at 164) |
 | r07 resin, 0.3 mm | ≈1.06 g (checkpoint) | ≈1.60 g | — | — | — | — | its resume diverged → continued as **r07b** |
 
 - **r03/r04:** the optimiser drew features thinner than 0.6 mm. The min-wall rule then added 0.23–0.27 g at extraction,
