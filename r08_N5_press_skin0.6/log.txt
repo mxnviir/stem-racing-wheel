@@ -190,3 +190,8 @@
 [21:43:27] it 187 beta   16 m_eq 1.310 g (design 0.506) mass 1.967 g | max vM  19.1 MPa (press@57, r 11.2 z 13.5) P-norm  19.1 | grey 0.075 change 0.020 [100s]
 [21:45:07] it 188 beta   16 m_eq 1.308 g (design 0.504) mass 1.965 g | max vM  22.2 MPa (press@57, r 11.2 z 3.7) P-norm  21.4 | grey 0.075 change 0.020 [100s]
 [21:46:47] it 189 beta   16 m_eq 1.301 g (design 0.497) mass 1.947 g | max vM  29.2 MPa (press@36, r 12.7 z 13.5) P-norm  28.4 | grey 0.076 change 0.020 [100s]
+[21:47:52] === r08_N5_press_skin0.6: SLS PA12, 0.6 mm skin and min wall, 5-fold symmetry, radial press only (rolling every ~5 deg); rf 1.5 (2.5 x min wall) so the optimiser itself keeps members >= 0.6 mm instead of the min-wall rule adding ~0.25 g after the fact (r01b/r03/r04 at rf 1.2) | Linux-7.0.0-1020-azure-x86_64-with-glibc2.43, 4 cpus
+[21:48:06] grid: nr 36 nt 170 nz 37 -> 214200 elements, 679320 dof, 42840 variables, 14 load cases; setup 14s; stress target 18.9 MPa (vM)
+[21:48:06] resuming from iteration 186 (beta 16.0), optimiser state restored
+[21:50:52] it 186 beta   16 m_eq 1.311 g (design 0.507) mass 1.969 g | max vM  19.0 MPa (press@21, r 11.2 z 3.7) P-norm  19.0 | grey 0.075 change 0.020 [165s]
+[21:53:37] it 187 beta   16 m_eq 1.310 g (design 0.506) mass 1.967 g | max vM  19.1 MPa (press@57, r 11.2 z 13.5) P-norm  19.1 | grey 0.075 change 0.020 [165s]
