@@ -107,7 +107,11 @@ def run_one(spec, smoke=False, verify=True):
     if "optimise" not in summary:
         t0 = time.time()
         w, x, pb, hist = topo.optimise_inertia(topo.Setup(**st), npz, log=log, sigma_target=spec.get("sigma_target"))
-        summary["optimise"] = dict(iterations=len(hist), final=hist[-1], minutes=(time.time() - t0) / 60)
+        converged = len(hist) < st["iters"]                 # topo stops early only when converged
+        summary["optimise"] = dict(iterations=len(hist), converged=converged, final=hist[-1],
+                                   minutes=(time.time() - t0) / 60)
+        if not converged:
+            log(f"WARNING: iteration cap {st['iters']} reached without convergence")
         json.dump(summary, open(summary_f, "w"), indent=1, default=float)
     # 2. extract the geometry
     if "extract" not in summary:
@@ -191,6 +195,7 @@ if __name__ == "__main__":
     runs = json.load(open(os.path.join(HERE, "runs.json")))["runs"]
     if smoke:
         runs = runs[:1]
+    failed = []
     for spec in runs:
         if args and not any(spec["name"].startswith(a) for a in args):
             continue
@@ -198,5 +203,8 @@ if __name__ == "__main__":
             run_one(spec, smoke=smoke, verify=verify)
         except Exception:
             traceback.print_exc()
+            failed.append(spec["name"])
             print(f"!!! {spec['name']} failed; continuing with the next run", flush=True)
     write_table()
+    if failed:
+        sys.exit(f"failed: {' '.join(failed)}")

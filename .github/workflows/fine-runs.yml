@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       runs:
-        description: "Space-separated run names (blank = all)"
+        description: "Space-separated run names or prefixes (blank = all in the matrix)"
         required: false
         default: ""
       smoke:
@@ -15,10 +15,22 @@ on:
         description: "Skip the verification stage"
         type: boolean
         default: false
+      attempt:
+        description: "Continuation number (set automatically when a job re-dispatches itself after the time limit)"
+        required: false
+        default: "1"
+      max_attempts:
+        description: "Stop auto-continuing after this many jobs per run"
+        required: false
+        default: "5"
 
 permissions:
   contents: write     # collect job commits small result files to the fine-run-results branch
-  actions: read       # fetch checkpoints from earlier runs (resume across the 6 h job limit)
+  actions: write      # fetch checkpoints from earlier runs; re-dispatch this workflow to continue after the time limit
+
+defaults:
+  run:
+    shell: bash       # bash -eo pipefail: a failing command in a pipeline fails the step
 
 jobs:
   fine-run:
@@ -28,14 +40,7 @@ jobs:
       fail-fast: false
       matrix:
         run:
-          - r01b_N6_skin0.6      # r01 continued from its seed with the exact resume
-          - r02_N5_skin0.6
-          - r03_N4_skin0.6
-          - r04_N8_skin0.6
-          - r05_N6_skin0.4
-          - r05b_N6_skin0.4_s14
-          - r07b_N6_AMXrigid_0.3 # r07 continued from its last healthy checkpoint
-          # r06_N6_skin0.7_h0.4 needs ~20 GB RAM: run it on a bigger machine, not a standard runner
+          - r08_N5_press_skin0.6
 
     steps:
       - uses: actions/checkout@v4
@@ -46,8 +51,26 @@ jobs:
           free -g
           df -h /
           uname -m
+          echo "attempt ${{ inputs.attempt }} of max ${{ inputs.max_attempts }}"
+
+      - name: Determine if this run should execute
+        id: should-run
+        run: |
+          RUN="${{ matrix.run }}"
+          SKIP=false
+          if [ "${{ inputs.smoke }}" = "true" ] && [ "${{ strategy.job-index }}" != "0" ]; then   # smoke: first run only
+            SKIP=true
+          elif [ -n "${{ inputs.runs }}" ]; then
+            SKIP=true
+            for w in ${{ inputs.runs }}; do
+              case "$RUN" in "$w"*) SKIP=false ;; esac
+            done
+          fi
+          echo "skip=$SKIP" >> "$GITHUB_OUTPUT"
+          echo "skip=$SKIP"
 
       - name: Set up swap (extra 8 GB)
+        if: steps.should-run.outputs.skip != 'true'
         run: |
           sudo fallocate -l 8G /mnt/swapfile
           sudo chmod 600 /mnt/swapfile
@@ -56,36 +79,35 @@ jobs:
           free -g
 
       - name: Install OpenGL libraries for gmsh
+        if: steps.should-run.outputs.skip != 'true'
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq libglu1-mesa libxcursor1 libxft2 libxinerama1 libxrender1
 
       - uses: actions/setup-python@v5
+        if: steps.should-run.outputs.skip != 'true'
         with:
           python-version: "3.12"
 
       - name: Install Python dependencies
+        if: steps.should-run.outputs.skip != 'true'
         run: pip install -r fine_runs/requirements.txt
 
       - name: Check pypardiso loads
-        run: |
-          python -c "
-          try:
-              import pypardiso; print('pypardiso OK')
-          except Exception as e:
-              print(f'pypardiso unavailable: {e} (will fall back to SuperLU)')
-          "
+        if: steps.should-run.outputs.skip != 'true'
+        run: python -c "import pypardiso; print('pypardiso OK')"
 
       - name: Download checkpoint from the latest earlier run (resume)
         # download-artifact@v4 only sees the current run, so look up the newest artifact of this
         # name across all runs. run_all.py discards it automatically if runs.json settings changed.
+        if: steps.should-run.outputs.skip != 'true' && inputs.smoke != true
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           NAME="${{ matrix.run }}-results"
-          RUN_ID=$(gh api "repos/${{ github.repository }}/actions/artifacts?name=$NAME&per_page=1" \
-                   --jq '.artifacts[0].workflow_run.id // empty')
+          RUN_ID=$(gh api "repos/${{ github.repository }}/actions/artifacts?name=$NAME&per_page=100" \
+                   --jq '[.artifacts[] | select(.expired == false)] | sort_by(.created_at) | last | .workflow_run.id // empty')
           if [ -n "$RUN_ID" ] && [ "$RUN_ID" != "${{ github.run_id }}" ]; then
             mkdir -p "fine_runs/results/${{ matrix.run }}"
             gh run download "$RUN_ID" -R "${{ github.repository }}" -n "$NAME" -D "fine_runs/results/${{ matrix.run }}" \
@@ -94,45 +116,28 @@ jobs:
             echo "no earlier checkpoint for $NAME"
           fi
 
-      - name: Determine if this run should execute
-        id: should-run
-        run: |
-          INPUT_RUNS="${{ inputs.runs }}"
-          RUN="${{ matrix.run }}"
-          SMOKE="${{ inputs.smoke }}"
-          if [ "$SMOKE" = "true" ] && [ "$RUN" != "r01b_N6_skin0.6" ]; then
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            echo "Smoke test: only r01 runs"
-          elif [ -n "$INPUT_RUNS" ] && ! echo "$INPUT_RUNS" | grep -qw "${RUN%%_*}"; then
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            echo "Run not in requested list: $INPUT_RUNS"
-          else
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Run optimisation
+        id: opt
         if: steps.should-run.outputs.skip != 'true'
         working-directory: fine_runs
         run: |
-          ARGS="${{ matrix.run }}"
           FLAGS=""
-          if [ "${{ inputs.smoke }}" = "true" ]; then
-            FLAGS="--smoke"
+          [ "${{ inputs.smoke }}" = "true" ] && FLAGS="--smoke"
+          [ "${{ inputs.no_verify }}" = "true" ] && FLAGS="$FLAGS --no-verify"
+          set +e
+          timeout 320m python run_all.py "${{ matrix.run }}" $FLAGS 2>&1 | tee /tmp/run.log
+          EXIT=${PIPESTATUS[0]}
+          set -e
+          if [ "$EXIT" -eq 124 ]; then
+            echo "timeout=true" >> "$GITHUB_OUTPUT"
+            echo "::warning::Hit the 320-minute limit: checkpoint uploaded, the workflow continues in a new run"
+          elif [ "$EXIT" -ne 0 ]; then
+            echo "::error::run_all.py exited with code $EXIT"
+            exit "$EXIT"
           fi
-          if [ "${{ inputs.no_verify }}" = "true" ]; then
-            FLAGS="$FLAGS --no-verify"
-          fi
-          timeout 320m python run_all.py $ARGS $FLAGS 2>&1 | tee /tmp/run.log || {
-            EXIT=$?
-            if [ $EXIT -eq 124 ]; then
-              echo "::warning::Run hit the 320-minute timeout — partial results will be uploaded for resume"
-            else
-              echo "::error::Run exited with code $EXIT"
-            fi
-          }
 
       - name: Find results directory
-        if: steps.should-run.outputs.skip != 'true'
+        if: always() && steps.should-run.outputs.skip != 'true'
         id: results-dir
         run: |
           if [ "${{ inputs.smoke }}" = "true" ]; then
@@ -141,45 +146,61 @@ jobs:
             echo "dir=fine_runs/results/${{ matrix.run }}" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Check completion
-        if: steps.should-run.outputs.skip != 'true'
-        run: |
-          SUMMARY="${{ steps.results-dir.outputs.dir }}/summary.json"
-          if [ ! -f "$SUMMARY" ]; then
-            echo "::warning::No summary.json produced"
-            exit 0
-          fi
-          python -c "
-          import json, sys
-          s = json.load(open('$SUMMARY'))
-          stages = []
-          if 'optimise' in s: stages.append('optimise')
-          if 'extract' in s: stages.append('extract')
-          if 'verify' in s: stages.append('verify')
-          print(f'Completed stages: {stages}')
-          v = s.get('verify', {})
-          if 'invalid' in v:
-              print(f'::warning::Design invalid: {v[\"invalid\"]}')
-              sys.exit(1)
-          if v.get('q_max', 0) > 1.0:
-              print(f'::warning::Stress ratio {v[\"q_max\"]:.2f} > 1.0 — may need sigma_target adjustment')
-          if not stages:
-              print('::warning::No stages completed')
-          "
-
       - name: Upload results
         if: always() && steps.should-run.outputs.skip != 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.run }}-results
+          name: ${{ matrix.run }}-results${{ inputs.smoke && '-smoke' || '' }}
           path: ${{ steps.results-dir.outputs.dir }}/
           if-no-files-found: ignore
           retention-days: 90
           overwrite: true
 
+      - name: Continue in a new workflow run (time limit reached)
+        if: steps.opt.outputs.timeout == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          A=${{ inputs.attempt }}; MAX=${{ inputs.max_attempts }}
+          if [ "$A" -ge "$MAX" ]; then
+            echo "::error::Still not finished after $A jobs (max_attempts $MAX); not continuing"
+            exit 1
+          fi
+          gh workflow run fine-runs.yml -R "${{ github.repository }}" --ref "${{ github.ref_name }}" \
+            -f runs="${{ matrix.run }}" -f no_verify="${{ inputs.no_verify }}" \
+            -f attempt=$((A + 1)) -f max_attempts="$MAX"
+          echo "dispatched continuation $((A + 1))"
+
+      - name: Check results
+        # fails the job if the run finished but is not converged or does not pass the full check
+        if: steps.should-run.outputs.skip != 'true' && steps.opt.outputs.timeout != 'true' && inputs.smoke != true
+        run: |
+          python - "${{ steps.results-dir.outputs.dir }}/summary.json" "${{ inputs.no_verify }}" <<'EOF'
+          import json, sys
+          s = json.load(open(sys.argv[1]))
+          o, v = s.get("optimise", {}), s.get("verify", {})
+          bad = []
+          if not o.get("converged", False):
+              bad.append(f"optimiser not converged ({o.get('iterations')} iterations)")
+          if sys.argv[2] != "true":
+              if not v or "invalid" in v:
+                  bad.append(f"verification missing or invalid: {v.get('invalid', 'no verify stage')}")
+              else:
+                  b = min(x[0] for x in v["buckling"]); f1 = v["modes_Hz"][0]
+                  print(f"m_eq {v['m_eq_g']:.3f} g, I {v['m_eq_g'] * 14.1**2:.0f} g mm^2, mass {v['mass_g']:.2f} g, "
+                        f"stress/allowable {v['q_max']:.2f} ({v['governing']}), buckling {b:.1f}, f1 {f1:.0f} Hz, "
+                        f"min-wall rule added {s['extract'].get('min_wall_added_g', 0):.3f} g")
+                  if v["q_max"] > 1.0: bad.append(f"stress ratio {v['q_max']:.2f} > 1")
+                  if b < 2.0: bad.append(f"buckling factor {b:.1f} < 2")
+                  if f1 < 1000: print(f"::warning::first natural frequency {f1:.0f} Hz < 3 x rotation (1000 Hz)")
+          for m in bad:
+              print(f"::error::{m}")
+          sys.exit(1 if bad else 0)
+          EOF
+
   collect:
     needs: fine-run
-    if: always()
+    if: always() && inputs.smoke != true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -197,43 +218,25 @@ jobs:
           cd fine_runs/results
           for d in *-results; do
             [ -d "$d" ] || continue
-            name="${d%-results}"
-            if [ "$d" != "$name" ]; then
-              mv "$d" "$name" 2>/dev/null || true
-            fi
+            mv "$d" "${d%-results}"
           done
-          ls -la || true
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+          ls -la
 
       - name: Build summary table
         run: |
-          pip install -q numpy
           cd fine_runs
-          python -c "
+          python3 -c "
           import os, json
-          results = 'results'
-          rows = []
-          for n in sorted(os.listdir(results)):
-              f = os.path.join(results, n, 'summary.json')
+          print('| Run | Iters | Converged | m_eq (g) | I (g mm^2) | Stress ratio | Status |')
+          print('|-----|-------|-----------|----------|------------|--------------|--------|')
+          for n in sorted(os.listdir('results')):
+              f = os.path.join('results', n, 'summary.json')
               if not os.path.isfile(f): continue
-              s = json.load(open(f))
-              v = s.get('verify', {}); e = s.get('extract', {}); o = s.get('optimise', {})
-              status = 'complete' if 'verify' in s and 'invalid' not in v else ('partial' if 'optimise' in s else 'none')
-              rows.append(f'| {n} | {o.get(\"iterations\", \"-\")} | {v.get(\"m_eq_g\", \"-\")} | {v.get(\"q_max\", \"-\")} | {status} |')
-          print('| Run | Iters | m_eq (g) | Stress ratio | Status |')
-          print('|-----|-------|----------|--------------|--------|')
-          for r in rows: print(r)
+              s = json.load(open(f)); v = s.get('verify', {}); o = s.get('optimise', {})
+              status = 'complete' if v and 'invalid' not in v else ('optimised' if o else 'in progress')
+              I = f\"{v['m_eq_g'] * 14.1**2:.0f}\" if 'm_eq_g' in v else '-'
+              print(f\"| {n} | {o.get('iterations', '-')} | {o.get('converged', '-')} | {v.get('m_eq_g', '-')} | {I} | {v.get('q_max', '-')} | {status} |\")
           " | tee "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload combined results
-        uses: actions/upload-artifact@v4
-        with:
-          name: all-fine-run-results
-          path: fine_runs/results/
-          retention-days: 90
 
       - name: Commit small result files to the fine-run-results branch
         # summaries, logs, renders and density fields (no STLs) so results can be read with plain git
@@ -242,7 +245,9 @@ jobs:
           mkdir -p /tmp/res && cd fine_runs/results
           for d in */; do
             d="${d%/}"; mkdir -p "/tmp/res/$d"
-            cp "$d"/summary.json "$d"/log.txt "$d"/wheel.png "$d"/density.npz "/tmp/res/$d/" 2>/dev/null || true
+            for f in summary.json log.txt wheel.png density.npz; do
+              [ -f "$d/$f" ] && cp "$d/$f" "/tmp/res/$d/"
+            done
           done
           REPO_URL="https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
           git clone -q --depth 1 --branch fine-run-results "$REPO_URL" /tmp/branch \

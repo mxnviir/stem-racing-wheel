@@ -1,230 +1,25 @@
 {
- "_comment": "Default minimum wall 0.6 mm (thinnest printable SLS PA12 vertical wall: Formlabs Fuse 0.6 mm, Stratasys 0.6 mm possible / 0.8 recommended). Fine topology-optimisation runs. Each entry: Setup parameters for analysis/topo.py plus t_min (minimum wall, enforced on the output geometry), verify_h (tet size of the full-accuracy check) and verify_step_deg. Loads model the wheel ROLLING on flat ground: the 20 N radial press and the 20 N diametral pinch are applied at every position across one symmetry sector - every 5 deg in the optimiser (n_phi per sector) and every 1 deg in the final check (effectively continuous), plus the 1 N running load and 20 000 rpm spin. No edge or axial loads. Objective: minimum rotational inertia of the wheel body (bearings excluded); constraint: von Mises <= sigma_target (default 0.9 x UTS/2).",
+ "_comment": "Fine topology-optimisation runs. Load model: the 20 N design force on each wheel (car stationary or racing) as a radial press at the contact, applied at every position the wheel can roll into - every ~5 deg across one symmetry sector in the optimiser (n_phi per sector) and every 1 deg in the final check - plus 20 000 rpm spin and the 1 N running stiffness in the check. No pinch, edge or axial loads. Objective: minimum rotational inertia of the wheel body (bearings excluded); constraint: von Mises <= sigma_target (default 0.9 x UTS/2). Each entry: Setup parameters for analysis/topo.py plus t_min (minimum wall, enforced on the output geometry), verify_h (tet size of the full-accuracy check) and verify_step_deg. Earlier press + pinch runs (r01-r07) are recorded in README.md and on the fine-run-results branch.",
  "runs": [
   {
-   "name": "r01_N6_skin0.6",
-   "note": "baseline SLS PA12, 6-fold symmetry",
-   "setup": {
-    "N": 6,
-    "t_rim": 0.6,
-    "rim_zone": 2.5,
-    "h": 0.5,
-    "h_rim": 0.15,
-    "rf": 1.2,
-    "iters": 220,
-    "lcs": [
-     "press",
-     "pinch"
-    ],
-    "n_phi": 12
-   },
-   "t_min": 0.6,
-   "verify_h": 0.8,
-   "verify_step_deg": 1.0
-  },
-  {
-   "name": "r01b_N6_skin0.6",
-   "note": "baseline SLS PA12, 6-fold symmetry | continues r01 from its iteration-101 checkpoint with the fixed (exact) resume",
-   "setup": {
-    "N": 6,
-    "t_rim": 0.6,
-    "rim_zone": 2.5,
-    "h": 0.5,
-    "h_rim": 0.15,
-    "rf": 1.2,
-    "iters": 300,
-    "lcs": [
-     "press",
-     "pinch"
-    ],
-    "n_phi": 12
-   },
-   "t_min": 0.6,
-   "verify_h": 0.8,
-   "verify_step_deg": 1.0,
-   "seed": "seeds/r01_it101.npz"
-  },
-  {
-   "name": "r02_N5_skin0.6",
-   "note": "5-fold symmetry (lets the optimiser pick 5/10/15 spokes)",
+   "name": "r08_N5_press_skin0.6",
+   "note": "SLS PA12, 0.6 mm skin and min wall, 5-fold symmetry, radial press only (rolling every ~5 deg); rf 1.5 (2.5 x min wall) so the optimiser itself keeps members >= 0.6 mm instead of the min-wall rule adding ~0.25 g after the fact (r01b/r03/r04 at rf 1.2)",
    "setup": {
     "N": 5,
     "t_rim": 0.6,
     "rim_zone": 2.5,
     "h": 0.5,
     "h_rim": 0.15,
-    "rf": 1.2,
-    "iters": 220,
+    "rf": 1.5,
+    "iters": 300,
     "lcs": [
-     "press",
-     "pinch"
+     "press"
     ],
     "n_phi": 14
    },
    "t_min": 0.6,
    "verify_h": 0.8,
    "verify_step_deg": 1.0
-  },
-  {
-   "name": "r03_N4_skin0.6",
-   "note": "4-fold symmetry",
-   "setup": {
-    "N": 4,
-    "t_rim": 0.6,
-    "rim_zone": 2.5,
-    "h": 0.5,
-    "h_rim": 0.15,
-    "rf": 1.2,
-    "iters": 220,
-    "lcs": [
-     "press",
-     "pinch"
-    ],
-    "n_phi": 18
-   },
-   "t_min": 0.6,
-   "verify_h": 0.8,
-   "verify_step_deg": 1.0
-  },
-  {
-   "name": "r04_N8_skin0.6",
-   "note": "8-fold symmetry",
-   "setup": {
-    "N": 8,
-    "t_rim": 0.6,
-    "rim_zone": 2.5,
-    "h": 0.5,
-    "h_rim": 0.15,
-    "rf": 1.2,
-    "iters": 220,
-    "lcs": [
-     "press",
-     "pinch"
-    ],
-    "n_phi": 9
-   },
-   "t_min": 0.6,
-   "verify_h": 0.8,
-   "verify_step_deg": 1.0
-  },
-  {
-   "name": "r05_N6_skin0.4",
-   "note": "thinner skin for a process that can print 0.4 mm walls (e.g. MJF / fine SLA); still SLS PA12 properties",
-   "setup": {
-    "N": 6,
-    "t_rim": 0.4,
-    "rim_zone": 2.5,
-    "h": 0.5,
-    "h_rim": 0.15,
-    "rf": 0.9,
-    "iters": 220,
-    "lcs": [
-     "press",
-     "pinch"
-    ],
-    "n_phi": 12
-   },
-   "t_min": 0.4,
-   "verify_h": 0.7,
-   "verify_step_deg": 1.0
-  },
-  {
-   "name": "r05b_N6_skin0.4_s14",
-   "note": "r05 with the optimiser stress target lowered 18.9 -> 14.0 MPa: r05 converged at m_eq 0.885 g but the full check read 1.27 x allowable (0.4 mm walls on a 0.5 mm grid: the optimiser under-reads the peak by ~27 %)",
-   "setup": {
-    "N": 6,
-    "t_rim": 0.4,
-    "rim_zone": 2.5,
-    "h": 0.5,
-    "h_rim": 0.15,
-    "rf": 0.9,
-    "iters": 220,
-    "lcs": [
-     "press",
-     "pinch"
-    ],
-    "n_phi": 12
-   },
-   "t_min": 0.4,
-   "verify_h": 0.7,
-   "verify_step_deg": 1.0,
-   "sigma_target": 14.0
-  },
-  {
-   "name": "r06_N6_skin0.6_h0.4",
-   "note": "mesh-refinement check of r01 (needs ~16 GB RAM, slow) - needs ~20 GB RAM: run locally, not on a standard GitHub runner",
-   "setup": {
-    "N": 6,
-    "t_rim": 0.6,
-    "rim_zone": 2.5,
-    "h": 0.4,
-    "h_rim": 0.12,
-    "rf": 1.2,
-    "iters": 220,
-    "lcs": [
-     "press",
-     "pinch"
-    ],
-    "n_phi": 12
-   },
-   "t_min": 0.6,
-   "verify_h": 0.7,
-   "verify_step_deg": 1.0
-  },
-  {
-   "name": "r07_N6_AMXrigid_0.3",
-   "note": "3D Systems Accura AMX Rigid Black (SLA): E 2000 MPa, UTS 51 MPa (weakest print direction), rho 1150 kg/m3, nu 0.38 (assumed); 0.3 mm skin and minimum wall",
-   "setup": {
-    "N": 6,
-    "t_rim": 0.3,
-    "rim_zone": 2.5,
-    "h": 0.5,
-    "h_rim": 0.15,
-    "rf": 0.8,
-    "iters": 220,
-    "lcs": [
-     "press",
-     "pinch"
-    ],
-    "n_phi": 12,
-    "E": 2000.0,
-    "nu": 0.38,
-    "rho": 1150.0,
-    "strength": 51.0,
-    "material": "Accura AMX Rigid Black (SLA)"
-   },
-   "t_min": 0.3,
-   "voxel": 0.1,
-   "verify_h": 0.6,
-   "verify_step_deg": 1.0
-  },
-  {
-   "name": "r07b_N6_AMXrigid_0.3",
-   "note": "3D Systems Accura AMX Rigid Black (SLA): E 2000 MPa, UTS 51 MPa (weakest print direction), rho 1150 kg/m3, nu 0.38 (assumed); 0.3 mm skin and minimum wall | continues r07 from its last healthy checkpoint (iteration 131); r07's own resume diverged (old checkpoints had no MMA state)",
-   "setup": {
-    "N": 6,
-    "t_rim": 0.3,
-    "rim_zone": 2.5,
-    "h": 0.5,
-    "h_rim": 0.15,
-    "rf": 0.8,
-    "iters": 320,
-    "lcs": [
-     "press",
-     "pinch"
-    ],
-    "n_phi": 12,
-    "E": 2000.0,
-    "nu": 0.38,
-    "rho": 1150.0,
-    "strength": 51.0,
-    "material": "Accura AMX Rigid Black (SLA)"
-   },
-   "t_min": 0.3,
-   "voxel": 0.1,
-   "verify_h": 0.6,
-   "verify_step_deg": 1.0,
-   "seed": "seeds/r07_it131.npz"
   }
  ]
 }

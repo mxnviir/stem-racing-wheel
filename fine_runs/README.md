@@ -8,19 +8,20 @@ Everything here is driven by `run_all.py` and the list in `runs.json`. Each run 
    every load case at several angles. The limit is von Mises ≤ 0.9 × UTS/2 on SLS PA12. Minimum feature size
    comes from the density filter and robust projection.
 2. **Extract** (`analysis/extract.py`) a smooth, watertight STL. Every wall is forced to be **≥ t_min**
-   (0.7 mm for SLS). If the optimiser closed a cavity, **powder-escape holes** are drilled to it from the
+   (0.6 mm for SLS PA12). If the optimiser closed a cavity, **powder-escape holes** are drilled to it from the
    inner face. Loose, unattached bodies make a run *invalid*.
 3. **Verify** (`analysis/verify_organic.py`) the real STL at full accuracy:
    - quadratic tetrahedra, full 360° model
-   - every load case at 6 angles across a symmetry sector
+   - every load case every 1° across a symmetry sector (rolling)
    - running stiffness and 20 000 rpm spin
    - buckling of the 3 worst cases
    - natural frequencies
 4. **Render** `wheel.png` (outside, inside, cut-away, mid-width section).
 
-Loads, as agreed: **radial press and diametral pinch only, 20 N, full width**. There are no edge, lip or axial
-loads. Edit `"lcs"` in `runs.json` to change that: the available cases are `press`, `pinch`, `press_e0`,
-`press_eW`, `pinch_e0`, `lip0` and `lipW`.
+Loads (decided 2026-11-25): **20 N radial press at the contact, full width** — the design force on each wheel
+with the car stationary or racing — plus 20 000 rpm spin. No pinch, edge, lip or axial loads. Edit `"lcs"` in
+`runs.json` to change that: the available cases are `press`, `pinch`, `press_e0`, `press_eW`, `pinch_e0`,
+`lip0` and `lipW`.
 
 ## Minimum wall: 0.6 mm by default (SLS PA12)
 
@@ -31,8 +32,9 @@ loads. Edit `"lcs"` in `runs.json` to change that: the available cases are `pres
 - service bureaus quote 0.7–1.0 mm for reliability ([Xometry](https://xometry.eu/en/?p=1593), [Protolabs](https://3dhubs.com/knowledge-base/designing-parts-sls-3d-printing), [Materialise](https://www.materialise.com/en/manufacturing/materials/pa-12-sls))
 
 The rim is a vertical wall when the wheel prints lying flat. The fixed rim skin and the minimum wall on the
-output geometry are therefore both 0.6 mm by default, with filter radius `rf` = 1.2 mm (about 2 × the
-minimum). Raise `t_rim`/`t_min` in `runs.json` if your printer or bureau needs more.
+output geometry are therefore both 0.6 mm by default. The filter radius `rf` is 1.5 mm (2.5 × the minimum):
+at 1.2 mm the optimiser left members thinner than 0.6 mm in three of four runs and the min-wall rule then
+added ~0.25 g after the fact. Raise `t_rim`/`t_min` in `runs.json` if your printer or bureau needs more.
 
 **The rim thickens itself where needed.** Only the 0.6 mm skin is fixed. The 2.5 mm band inside it
 (`rim_zone`, meshed at 0.15 mm) is design space, so the optimiser chooses the rim thickness at every angle
@@ -41,10 +43,11 @@ rim stays at the skin thickness. The other 7 % grows into 1–3 mm pads exactly 
 
 ## Loads: the wheel rolling on flat ground
 
-The 20 N radial press and the 20 N diametral pinch are applied at every position the wheel can roll into.
+The 20 N radial press is applied at every position the wheel can roll into.
 Thanks to the N-fold symmetry, one sector covers all of them.
 
-- **Optimiser:** a load every 5° across the sector (`n_phi`).
+- **Optimiser:** a load every ~5° across the sector (`n_phi`; 14 per 72° sector for N 5). 20° spacing failed
+  between the sampled angles and 10° needed a hand-lowered stress target; 5° is about half the load patch width.
 - **Final check:** a load every 1° (`verify_step_deg`), which is effectively continuous.
 
 There is no uniform pressure around the wheel, because there's no tyre to create one. Spin (20 000 rpm)
@@ -53,16 +56,15 @@ excluded**.
 
 ## Running on GitHub Actions
 
-Use the `.github/workflows/fine-runs.yml` workflow (Actions tab, "Run workflow"). A job stops at 320 minutes
-and uploads its checkpoint. Dispatch the workflow again and it **resumes from the newest checkpoint**.
+Use the `.github/workflows/fine-runs.yml` workflow (Actions tab, "Run workflow"). A job stops at 320 minutes,
+uploads its checkpoint and **dispatches the workflow again by itself**; the new job resumes exactly from the
+checkpoint. This repeats up to `max_attempts` (default 5) jobs per run.
 
+- The job fails (red) if `run_all.py` crashes, the optimiser hits its iteration cap without converging, or the
+  full check fails (stress ratio > 1, buckling < 2). f1 below 3 × rotation (1000 Hz) is a warning.
 - `run_all.py` discards a checkpoint whose `runs.json` settings have changed.
 - Small result files (summary, log, render, density field) are pushed to the `fine-run-results` branch.
-- r06 needs about 20 GB and is not in the CI matrix.
-
-The filter radius `rf` is 1.4 mm for the 0.7 mm-wall runs. With 1.0 mm on the 0.5 mm grid, the optimiser
-made 0.5 mm features. The 0.7 mm minimum-wall rule then added about 26 % mass, and the result came out
-over-strong at 0.40× the allowable. `extract` now reports `min_wall_added_g`; if it's large, raise `rf`.
+- `extract` reports `min_wall_added_g`; if it's large, raise `rf`.
 
 ## Setup (once)
 
@@ -131,14 +133,12 @@ optimiser resumes from its last save (every 5 iterations), and finished stages a
 
 ## Runs in `runs.json`
 
-| run | what it tests |
+| run | what it is |
 |---|---|
-| r01_N6_skin0.7 | baseline: SLS PA12, 0.7 mm rim skin, 6-fold symmetry |
-| r02_N5_skin0.7 | 5-fold symmetry (5/10/15 spokes possible) |
-| r03_N4_skin0.7 | 4-fold symmetry |
-| r04_N8_skin0.7 | 8-fold symmetry |
-| r05_N6_skin0.4 | 0.4 mm skin and 0.4 mm min wall (a process that can print 0.4 mm walls) |
-| r06_N6_skin0.7_h0.4 | mesh-refinement check of r01 (big) |
+| r08_N5_press_skin0.6 | SLS PA12, 0.6 mm skin and min wall, 5-fold symmetry, radial press only, rf 1.5, up to 300 iterations |
+
+The earlier runs r01–r07 (press **and pinch**) are recorded below and on the `fine-run-results` branch; their
+settings are in git history.
 
 Symmetry order N is a balance requirement: N-fold symmetry makes the wheel statically balanced. Inside each
 sector the shape is completely free.
@@ -176,7 +176,7 @@ a continuous web costs less inertia than spokes at this wall thickness.
 The resin run (r07, Accura AMX, 0.3 mm) was at iteration 134 at its last checkpoint and is not yet final.
 There, the optimiser formed a hollow box of two ~0.45 mm side walls (m_eq ≈ 1.06 g at the checkpoint).
 
-### All fine runs so far (full check: P2 tets, rolling every 1°, wheel only)
+### Earlier fine runs, press + pinch loads (full check: P2 tets, rolling every 1°, wheel only)
 
 Headline figure: **moment of inertia I about the axle, in g·mm²** (wheel only, no bearings). Lower is better.
 
@@ -188,7 +188,9 @@ Headline figure: **moment of inertia I about the axle, in g·mm²** (wheel only,
 | r05 N6, 0.4 mm | 176 | 1.25 g | **1.27** | 3.1 | 436 Hz | 0 g | FAIL: stress (pinch) |
 | r01 N6, 0.6 mm | — | — | — | — | — | — | runner lost at iteration 104 → continued as **r01b** |
 | r01b N6, 0.6 mm | 249 | 1.83 g | 0.53 | 17.3 | 1589 Hz | 0.25 g | pass, heavy (clean resume, converged at 164) |
+| r05b N6, 0.4 mm, target 14 MPa | 207 | 1.46 g | 0.77 | 5.5 | **462 Hz** | 0 g | pass on stress, but f1 only 1.4 × rotation; no real process matches 0.4 mm walls with PA12 properties |
 | r07 resin, 0.3 mm | ≈211 (checkpoint) | ≈1.60 g | — | — | — | — | its resume diverged → continued as **r07b** |
+| r07b resin, 0.3 mm | — | — | — | — | — | — | stopped: oscillated (peak stress 22–132 MPa vs 22.9 target) for 80 iterations, never converged |
 | *coarse reference (spoked)* | *239* | 1.53 g | 0.72 | 6.1 | 1015 Hz | — | pass |
 
 - **r03/r04:** the optimiser drew features thinner than 0.6 mm. The min-wall rule then added 0.23–0.27 g at extraction,
