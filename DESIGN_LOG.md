@@ -134,3 +134,9 @@ Fine runs: `fine_runs/` (GitHub Actions workflow `.github/workflows/fine-runs.ym
   with sigma_target 14 MPa.
 - r01's runner was lost at iteration 104; it is resuming.
 - r07 (resin) is still optimising.
+- **Resume bug fixed.** Checkpoints did not store the MMA state (asymptotes, previous iterates) or the stress normalisation.
+  - Every cross-job resume restarted with wide asymptotes, and the optimiser cut load paths: r07 went 23 → 891 MPa, then recovered
+    heavier at m_eq 1.14 g instead of 1.02 g. r04 went 29 → 79 MPa.
+  - Now saved and restored; a stop/resume equals the uninterrupted run (max |Δx| = 0).
+  - r01b and r07b continue from the last healthy checkpoints (`fine_runs/seeds/`).
+  - r03 and r04 were also hit by the bug, but at the iterations where they resumed their designs were already heavier than r02, so they were not re-run.

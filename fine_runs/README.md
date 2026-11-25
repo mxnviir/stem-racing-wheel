@@ -184,8 +184,8 @@ There, the optimiser formed a hollow box of two ~0.45 mm side walls (m_eq ≈ 1.
 | r03 N4, 0.6 mm | 1.249 g | 1.89 g | 0.49 | 16.5 | 1340 Hz | 0.27 g | pass, heavy |
 | r04 N8, 0.6 mm | 1.247 g | 1.79 g | 0.63 | 13.5 | 1617 Hz | 0.23 g | pass, heavy (iteration cap) |
 | r05 N6, 0.4 mm | 0.885 g | 1.25 g | **1.27** | 3.1 | 436 Hz | 0 g | FAIL: stress (pinch) |
-| r01 N6, 0.6 mm | — | — | — | — | — | — | runner lost at iteration 104; resuming |
-| r07 resin, 0.3 mm | ≈1.06 g (checkpoint) | ≈1.60 g | — | — | — | — | still optimising |
+| r01 N6, 0.6 mm | — | — | — | — | — | — | runner lost at iteration 104 → continued as **r01b** |
+| r07 resin, 0.3 mm | ≈1.06 g (checkpoint) | ≈1.60 g | — | — | — | — | its resume diverged → continued as **r07b** |
 
 - **r03/r04:** the optimiser drew features thinner than 0.6 mm. The min-wall rule then added 0.23–0.27 g at extraction,
   which makes both wheels heavy and over-strong. Even before that rule ran, their m_eq (1.15 g) was above r02's,
@@ -193,6 +193,17 @@ There, the optimiser formed a hollow box of two ~0.45 mm side walls (m_eq ≈ 1.
 - **r05 (0.4 mm wall) is the only fine run with clear organic spokes** (6 branching spokes between two side walls).
   It also has the lowest inertia. The optimiser under-read its peak stress by about 27 %: 0.4 mm members sit on a
   0.5 mm grid. **r05b** re-runs it with `sigma_target` 14 MPa instead of 18.9 MPa.
+
+### Resume bug (fixed): why r01b and r07b exist
+
+Checkpoints used to save only the design. A resumed job restarted MMA with wide initial asymptotes and reset the
+stress normalisation, so its first steps were over-confident and could cut a load path:
+- r07 went from 23 to 891 MPa peak stress within 15 iterations, then recovered into a heavier design (m_eq 1.02 → 1.14 g).
+- r04 jumped from 29 to 79 MPa.
+
+Checkpoints now hold the full optimiser state, and a stop/resume reproduces the uninterrupted run bit for bit.
+**r01b** and **r07b** continue r01 and r07 from their last healthy checkpoints (`seeds/`, via the `seed` field in
+`runs.json`). They replace r01 and r07 in the workflow matrix.
 
 ## Rim thickness vs process — read this
 
