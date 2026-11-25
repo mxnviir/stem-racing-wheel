@@ -23,6 +23,28 @@
    "verify_step_deg": 1.0
   },
   {
+   "name": "r01b_N6_skin0.6",
+   "note": "baseline SLS PA12, 6-fold symmetry | continues r01 from its iteration-101 checkpoint with the fixed (exact) resume",
+   "setup": {
+    "N": 6,
+    "t_rim": 0.6,
+    "rim_zone": 2.5,
+    "h": 0.5,
+    "h_rim": 0.15,
+    "rf": 1.2,
+    "iters": 300,
+    "lcs": [
+     "press",
+     "pinch"
+    ],
+    "n_phi": 12
+   },
+   "t_min": 0.6,
+   "verify_h": 0.8,
+   "verify_step_deg": 1.0,
+   "seed": "seeds/r01_it101.npz"
+  },
+  {
    "name": "r02_N5_skin0.6",
    "note": "5-fold symmetry (lets the optimiser pick 5/10/15 spokes)",
    "setup": {
@@ -175,6 +197,34 @@
    "voxel": 0.1,
    "verify_h": 0.6,
    "verify_step_deg": 1.0
+  },
+  {
+   "name": "r07b_N6_AMXrigid_0.3",
+   "note": "3D Systems Accura AMX Rigid Black (SLA): E 2000 MPa, UTS 51 MPa (weakest print direction), rho 1150 kg/m3, nu 0.38 (assumed); 0.3 mm skin and minimum wall | continues r07 from its last healthy checkpoint (iteration 131); r07's own resume diverged (old checkpoints had no MMA state)",
+   "setup": {
+    "N": 6,
+    "t_rim": 0.3,
+    "rim_zone": 2.5,
+    "h": 0.5,
+    "h_rim": 0.15,
+    "rf": 0.8,
+    "iters": 320,
+    "lcs": [
+     "press",
+     "pinch"
+    ],
+    "n_phi": 12,
+    "E": 2000.0,
+    "nu": 0.38,
+    "rho": 1150.0,
+    "strength": 51.0,
+    "material": "Accura AMX Rigid Black (SLA)"
+   },
+   "t_min": 0.3,
+   "voxel": 0.1,
+   "verify_h": 0.6,
+   "verify_step_deg": 1.0,
+   "seed": "seeds/r07_it131.npz"
   }
  ]
 }

@@ -100,6 +100,10 @@ def run_one(spec, smoke=False, verify=True):
     summary["spec"] = spec
     log(f"=== {name}: {spec.get('note', '')} | {platform.platform()}, {os.cpu_count()} cpus")
     # 1. optimise (resumes automatically from density.npz)
+    if spec.get("seed") and not os.path.exists(npz) and "optimise" not in summary:
+        import shutil                                       # start from a committed checkpoint of an earlier run
+        shutil.copy(os.path.join(HERE, spec["seed"]), npz)
+        log(f"seeded from {spec['seed']}")
     if "optimise" not in summary:
         t0 = time.time()
         w, x, pb, hist = topo.optimise_inertia(topo.Setup(**st), npz, log=log, sigma_target=spec.get("sigma_target"))

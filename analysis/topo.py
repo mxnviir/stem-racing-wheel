@@ -530,6 +530,14 @@ def mma_step(x, df0, g, dg, xmin, xmax, L, U, x1, x2, it, move=0.1):
     return xof(lam), L, U
 
 
+def _mma_state(L, U, x1, x2, cn):
+    """MMA asymptotes, the two previous iterates and the stress normalisation, saved in every checkpoint
+    so that a resumed run (e.g. the next 6 h GitHub job) continues exactly where it stopped."""
+    if L is None:
+        return {}
+    return dict(mma_L=L, mma_U=U, mma_x1=x1, mma_x2=x2, cn=cn)
+
+
 def optimise_inertia(s: Setup, out="topo_inertia.npz", log=print, sigma_target=None, P=10.0, q_relax=0.5):
     """Minimum rotational inertia subject to the stress limit under all load cases (and the minimum
     length scale). Constraint: adaptive-normalised P-norm of the relaxed surface von Mises stress of the
@@ -555,7 +563,14 @@ def optimise_inertia(s: Setup, out="topo_inertia.npz", log=print, sigma_target=N
         if len(d["x"]) == w.nvar:
             x, beta, hist = d["x"], float(d["beta"]), json.loads(str(d["hist"]))
             it0 = len(hist)
-            log(f"resuming from iteration {it0} (beta {beta})")
+            if "mma_L" in d:                    # full optimiser state: the resumed run continues exactly
+                L, U_, x1, x2, cn = d["mma_L"], d["mma_U"], d["mma_x1"], d["mma_x2"], float(d["cn"])
+                log(f"resuming from iteration {it0} (beta {beta}), optimiser state restored")
+            else:                               # old checkpoint without MMA state: restart the asymptotes
+                L, U_ = x - 0.02, x + 0.02     # tight (= conservative), not the wide initial 0.2 that let
+                x1 = x2 = x.copy()             # resumed runs cut a load path (r07: 23 -> 891 MPa)
+                cn = None
+                log(f"resuming from iteration {it0} (beta {beta}), old checkpoint: tight MMA restart")
     for it in range(it0, s.iters):
         if it > 0 and it % 25 == 0 and beta < 16:
             beta *= 2
@@ -569,7 +584,7 @@ def optimise_inertia(s: Setup, out="topo_inertia.npz", log=print, sigma_target=N
         rel[excl] = 0.0
         true_max = float(rel.max())
         pn = float(((rel / allow)**P).sum()**(1 / P)) * allow
-        cn = 0.5 * cn + 0.5 * (true_max / pn) if it > 0 else true_max / pn  # adaptive normalisation
+        cn = 0.5 * cn + 0.5 * (true_max / pn) if (it > 0 and cn is not None) else true_max / pn  # adaptive normalisation
         G = cn * pn
         # sensitivities of G: d pn/d rel = (rel/pn)^(P-1)
         dpn = np.where(rel > 0, (rel / pn)**(P - 1), 0.0) * cn
@@ -601,10 +616,12 @@ def optimise_inertia(s: Setup, out="topo_inertia.npz", log=print, sigma_target=N
                 log("converged"); break
         if it % 5 == 0:
             np.savez_compressed(out, x=x, rho=pb, rho_e=pe, beta=beta, setup=json.dumps(asdict(s), default=list),
-                                r=w.r, z=w.z, nt=w.nt, hist=json.dumps(hist))
+                                r=w.r, z=w.z, nt=w.nt, hist=json.dumps(hist),
+                                **_mma_state(L, U_, x1, x2, cn))
     pe, dpe, pb, dpb = w.densities(x, beta)
     np.savez_compressed(out, x=x, rho=pb, rho_e=pe, beta=beta, setup=json.dumps(asdict(s), default=list),
-                        r=w.r, z=w.z, nt=w.nt, hist=json.dumps(hist))
+                        r=w.r, z=w.z, nt=w.nt, hist=json.dumps(hist),
+                                **_mma_state(L, U_, x1, x2, cn))
     return w, x, pb, hist
 
 

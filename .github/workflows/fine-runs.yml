@@ -28,13 +28,13 @@ jobs:
       fail-fast: false
       matrix:
         run:
-          - r01_N6_skin0.6
+          - r01b_N6_skin0.6      # r01 continued from its seed with the exact resume
           - r02_N5_skin0.6
           - r03_N4_skin0.6
           - r04_N8_skin0.6
           - r05_N6_skin0.4
           - r05b_N6_skin0.4_s14
-          - r07_N6_AMXrigid_0.3
+          - r07b_N6_AMXrigid_0.3 # r07 continued from its last healthy checkpoint
           # r06_N6_skin0.7_h0.4 needs ~20 GB RAM: run it on a bigger machine, not a standard runner
 
     steps:
@@ -100,7 +100,7 @@ jobs:
           INPUT_RUNS="${{ inputs.runs }}"
           RUN="${{ matrix.run }}"
           SMOKE="${{ inputs.smoke }}"
-          if [ "$SMOKE" = "true" ] && [ "$RUN" != "r01_N6_skin0.6" ]; then
+          if [ "$SMOKE" = "true" ] && [ "$RUN" != "r01b_N6_skin0.6" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
             echo "Smoke test: only r01 runs"
           elif [ -n "$INPUT_RUNS" ] && ! echo "$INPUT_RUNS" | grep -qw "${RUN%%_*}"; then
