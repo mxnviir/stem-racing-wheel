@@ -178,15 +178,19 @@ There, the optimiser formed a hollow box of two ~0.45 mm side walls (m_eq ≈ 1.
 
 ### All fine runs so far (full check: P2 tets, rolling every 1°, wheel only)
 
-| run | m_eq | mass | stress / allowable | buckling | f1 | min-wall rule added | status |
+Headline figure: **moment of inertia I about the axle, in g·mm²** (wheel only, no bearings). Lower is better.
+
+| run | **I (g·mm²)** | mass | stress / allowable | buckling | f1 | min-wall rule added | status |
 |---|---|---|---|---|---|---|---|
-| r02 N5, 0.6 mm | **1.075 g** | 1.46 g | 0.80 | 5.7 | 1080 Hz | 0 g | **pass, best valid** |
-| r03 N4, 0.6 mm | 1.249 g | 1.89 g | 0.49 | 16.5 | 1340 Hz | 0.27 g | pass, heavy |
-| r04 N8, 0.6 mm | 1.247 g | 1.79 g | 0.63 | 13.5 | 1617 Hz | 0.23 g | pass, heavy (iteration cap) |
-| r05 N6, 0.4 mm | 0.885 g | 1.25 g | **1.27** | 3.1 | 436 Hz | 0 g | FAIL: stress (pinch) |
+| r02 N5, 0.6 mm | **214** | 1.46 g | 0.80 | 5.7 | 1080 Hz | 0 g | **pass, best valid** |
+| r03 N4, 0.6 mm | 248 | 1.89 g | 0.49 | 16.5 | 1340 Hz | 0.27 g | pass, heavy |
+| r04 N8, 0.6 mm | 248 | 1.79 g | 0.63 | 13.5 | 1617 Hz | 0.23 g | pass, heavy (iteration cap) |
+| r05 N6, 0.4 mm | 176 | 1.25 g | **1.27** | 3.1 | 436 Hz | 0 g | FAIL: stress (pinch) |
 | r01 N6, 0.6 mm | — | — | — | — | — | — | runner lost at iteration 104 → continued as **r01b** |
-| r01b N6, 0.6 mm | 1.253 g | 1.83 g | 0.53 | 17.3 | 1589 Hz | 0.25 g | pass, heavy (clean resume, converged at 164) |
-| r07 resin, 0.3 mm | ≈1.06 g (checkpoint) | ≈1.60 g | — | — | — | — | its resume diverged → continued as **r07b** |
+| r01b N6, 0.6 mm | 249 | 1.83 g | 0.53 | 17.3 | 1589 Hz | 0.25 g | pass, heavy (clean resume, converged at 164) |
+| r07 resin, 0.3 mm | ≈211 (checkpoint) | ≈1.60 g | — | — | — | — | its resume diverged → continued as **r07b** |
+| *coarse reference (spoked)* | *239* | 1.53 g | 0.72 | 6.1 | 1015 Hz | — | pass |
+| *parametric drum* | *270* | — | — | — | — | — | baseline |
 
 - **r03/r04:** the optimiser drew features thinner than 0.6 mm. The min-wall rule then added 0.23–0.27 g at extraction,
   which makes both wheels heavy and over-strong. Even before that rule ran, their m_eq (1.15 g) was above r02's,
