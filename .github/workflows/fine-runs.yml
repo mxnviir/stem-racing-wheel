@@ -40,7 +40,7 @@ jobs:
       fail-fast: false
       matrix:
         run:
-          - r08_N5_press_skin0.6
+          - r09_N5_press_skin0.6
 
     steps:
       - uses: actions/checkout@v4

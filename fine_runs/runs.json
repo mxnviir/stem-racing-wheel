@@ -2,15 +2,15 @@
  "_comment": "Fine topology-optimisation runs. Load model: the 20 N design force on each wheel (car stationary or racing) as a radial press at the contact, applied at every position the wheel can roll into - every ~5 deg across one symmetry sector in the optimiser (n_phi per sector) and every 1 deg in the final check - plus 20 000 rpm spin and the 1 N running stiffness in the check. No pinch, edge or axial loads. Objective: minimum rotational inertia of the wheel body (bearings excluded); constraint: von Mises <= sigma_target (default 0.9 x UTS/2). Each entry: Setup parameters for analysis/topo.py plus t_min (minimum wall, enforced on the output geometry), verify_h (tet size of the full-accuracy check) and verify_step_deg. Earlier press + pinch runs (r01-r07) are recorded in README.md and on the fine-run-results branch.",
  "runs": [
   {
-   "name": "r08_N5_press_skin0.6",
-   "note": "SLS PA12, 0.6 mm skin and min wall, 5-fold symmetry, radial press only (rolling every ~5 deg); rf 1.5 (2.5 x min wall) so the optimiser itself keeps members >= 0.6 mm instead of the min-wall rule adding ~0.25 g after the fact (r01b/r03/r04 at rf 1.2)",
+   "name": "r09_N5_press_skin0.6",
+   "note": "SLS PA12, 0.6 mm skin and min wall, 5-fold symmetry, radial press only (rolling every ~5 deg); rf 1.2 as in r02 (r08 with rf 1.5 grew members twice as heavy: m_eq 1.31 g at iteration 190 vs r02 1.06 g, and was stopped)",
    "setup": {
     "N": 5,
     "t_rim": 0.6,
     "rim_zone": 2.5,
     "h": 0.5,
     "h_rim": 0.15,
-    "rf": 1.5,
+    "rf": 1.2,
     "iters": 300,
     "lcs": [
      "press"

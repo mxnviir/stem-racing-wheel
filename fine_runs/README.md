@@ -32,9 +32,9 @@ with the car stationary or racing — plus 20 000 rpm spin. No pinch, edge, lip 
 - service bureaus quote 0.7–1.0 mm for reliability ([Xometry](https://xometry.eu/en/?p=1593), [Protolabs](https://3dhubs.com/knowledge-base/designing-parts-sls-3d-printing), [Materialise](https://www.materialise.com/en/manufacturing/materials/pa-12-sls))
 
 The rim is a vertical wall when the wheel prints lying flat. The fixed rim skin and the minimum wall on the
-output geometry are therefore both 0.6 mm by default. The filter radius `rf` is 1.5 mm (2.5 × the minimum):
-at 1.2 mm the optimiser left members thinner than 0.6 mm in three of four runs and the min-wall rule then
-added ~0.25 g after the fact. Raise `t_rim`/`t_min` in `runs.json` if your printer or bureau needs more.
+output geometry are therefore both 0.6 mm by default, with filter radius `rf` = 1.2 mm (2 × the minimum).
+At 1.2 mm the optimiser left some members thinner than 0.6 mm in three of four press + pinch runs, and the
+min-wall rule then added ~0.25 g; rf 1.5 (r08) avoids that but doubles the optimised material, which is worse. Raise `t_rim`/`t_min` in `runs.json` if your printer or bureau needs more.
 
 **The rim thickens itself where needed.** Only the 0.6 mm skin is fixed. The 2.5 mm band inside it
 (`rim_zone`, meshed at 0.15 mm) is design space, so the optimiser chooses the rim thickness at every angle
@@ -135,7 +135,10 @@ optimiser resumes from its last save (every 5 iterations), and finished stages a
 
 | run | what it is |
 |---|---|
-| r08_N5_press_skin0.6 | SLS PA12, 0.6 mm skin and min wall, 5-fold symmetry, radial press only, rf 1.5, up to 300 iterations |
+| r09_N5_press_skin0.6 | SLS PA12, 0.6 mm skin and min wall, 5-fold symmetry, radial press only, rf 1.2, up to 300 iterations |
+
+r08 (the same with rf 1.5) was stopped after 190 iterations: the larger filter doubled the optimised material
+(m_eq 1.31 g vs 1.06 g for r02) and peak stress kept spiking 28–45 MPa, so it would not have converged.
 
 The earlier runs r01–r07 (press **and pinch**) are recorded below and on the `fine-run-results` branch; their
 settings are in git history.
