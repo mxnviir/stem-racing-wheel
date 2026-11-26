@@ -180,6 +180,26 @@ a continuous web costs less inertia than spokes at this wall thickness.
 The resin run (r07, Accura AMX, 0.3 mm) was at iteration 134 at its last checkpoint and is not yet final.
 There, the optimiser formed a hollow box of two ~0.45 mm side walls (m_eq ≈ 1.06 g at the checkpoint).
 
+## Current result: r10 (radial press only, N 5, PA12, 0.6 mm) — passes
+
+Files: `results_verified/r10_N5_press_from_r02/` (summary, log, render). Full check: P2 tets, press rolled every 1°
+(72 positions), spin, buckling, modes; wheel body only.
+
+| I (g·mm²) | m_eq | mass | stress / allowable | buckling | f1 | min-wall rule added | wall p1 |
+|---|---|---|---|---|---|---|---|
+| **214** | 1.076 g | 1.46 g | **0.74** (press@47) | 6.2 | 1085 Hz (3.3 × rotation) | 0 g | 0.60 mm |
+
+Shape: 0.6 mm rim, a single thin central web (diaphragm) and the bearing hub — no spokes.
+
+How it was reached:
+- **r08** (rf 1.5) was stopped at iteration 190: the larger filter doubled the optimised material (m_eq 1.31 g).
+- **r09** (rf 1.2, from scratch) settled into a two-web layout at m_eq ≈ 1.24 g and was stopped at iteration ~115+.
+  Topology optimisation finds a local optimum; the first ~20 iterations matched r02 exactly, then it branched.
+- **r10** starts from r02's converged design with press only. It converged on its first iteration: the design did
+  not move (max change 0.004) and the press stress was already on target (18.4 of 18.9 MPa).
+  **Dropping pinch frees no material for this wheel:** in r02's 117 iterations the worst case was a press on all but
+  one iteration, so the press always set the wall thicknesses.
+
 ### Earlier fine runs, press + pinch loads (full check: P2 tets, rolling every 1°, wheel only)
 
 Headline figure: **moment of inertia I about the axle, in g·mm²** (wheel only, no bearings). Lower is better.

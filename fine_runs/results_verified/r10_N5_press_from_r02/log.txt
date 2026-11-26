@@ -1,0 +1,19 @@
+[03:32:12] === r10_N5_press_from_r02: r09 settings (radial press only, N5, PA12 0.6 mm, rf 1.2), started from r02's converged design (iteration 117, press + pinch): r02 already satisfies press-only, so the optimiser can only remove what pinch needed. r09 from scratch settled into a heavier two-web layout (m_eq ~1.24 g vs r02 1.06 g at the same iteration). | Linux-7.0.0-1020-azure-x86_64-with-glibc2.43, 4 cpus
+[03:32:12] seeded from seeds/r02_it117.npz
+[03:32:22] grid: nr 36 nt 170 nz 37 -> 214200 elements, 679320 dof, 42840 variables, 14 load cases; setup 10s; stress target 18.9 MPa (vM)
+[03:32:22] resuming from iteration 117 (beta 16.0), old checkpoint: tight MMA restart
+[03:34:16] it 117 beta   16 m_eq 1.061 g (design 0.257) mass 1.434 g | max vM  18.4 MPa (press@15, r 13.0 z 8.8) P-norm  18.4 | grey 0.017 change 0.004 [114s]
+[03:34:16] converged
+[03:34:19] min-wall rule added 0.000 g (OK)
+[03:34:41] extract: {'triangles': 455600, 'shells': 1, 'cavities': 0, 'loose_bodies': 0, 'watertight': True, 'volume_mm3': 1575.9762824953168, 'mass_g': 1.4656579427206446, 'min_wall_added_g': 0.0, 'wall_p1_mm': 0.5953431826505637, 'wall_median_mm': 0.6243442887743933, 'holes': None}
+[03:34:42] verification: load every 1.00 deg across the sector (72 positions)
+[03:35:08] material: SLS PA12 (PA2200): E 1700 MPa, nu 0.4, rho 930 kg/m3, UTS 42.0 MPa -> allowable 21.0 MPa
+[03:35:08] mesh: 12531 nodes, 38069 tets, 226347 dof [27s]; mass 1.460 g, m_eq 1.076 g (wheel only, no bearings)
+[03:36:19] stress: q_max 0.741 (press@47); next: press@46 0.74, press@48 0.73, press@45 0.73, press@26 0.73, press@40 0.72
+[03:36:19] running stiffness 0.63..0.80 um/N over the sector (spoke-passing ripple 24 %)
+[03:36:54] buckling press@47: lambda_1 = 6.21
+[03:37:28] buckling press@46: lambda_1 = 6.20
+[03:38:03] buckling press@48: lambda_1 = 6.22
+[03:38:26] natural frequencies (Hz): 1085, 1086, 1424, 1427, 1663, 2898 (rotation 333 Hz)
+[03:38:26] done [224s]
+[03:38:34] === r10_N5_press_from_r02 done
