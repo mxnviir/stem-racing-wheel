@@ -20,6 +20,27 @@
    "t_min": 0.6,
    "verify_h": 0.8,
    "verify_step_deg": 1.0
+  },
+  {
+   "name": "r10_N5_press_from_r02",
+   "note": "r09 settings (radial press only, N5, PA12 0.6 mm, rf 1.2), started from r02's converged design (iteration 117, press + pinch): r02 already satisfies press-only, so the optimiser can only remove what pinch needed. r09 from scratch settled into a heavier two-web layout (m_eq ~1.24 g vs r02 1.06 g at the same iteration).",
+   "setup": {
+    "N": 5,
+    "t_rim": 0.6,
+    "rim_zone": 2.5,
+    "h": 0.5,
+    "h_rim": 0.15,
+    "rf": 1.2,
+    "iters": 300,
+    "lcs": [
+     "press"
+    ],
+    "n_phi": 14
+   },
+   "t_min": 0.6,
+   "verify_h": 0.8,
+   "verify_step_deg": 1.0,
+   "seed": "seeds/r02_it117.npz"
   }
  ]
 }

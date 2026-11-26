@@ -41,6 +41,7 @@ jobs:
       matrix:
         run:
           - r09_N5_press_skin0.6
+          - r10_N5_press_from_r02   # continues r02's converged design with press only
 
     steps:
       - uses: actions/checkout@v4

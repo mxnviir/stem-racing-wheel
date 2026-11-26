@@ -136,6 +136,7 @@ optimiser resumes from its last save (every 5 iterations), and finished stages a
 | run | what it is |
 |---|---|
 | r09_N5_press_skin0.6 | SLS PA12, 0.6 mm skin and min wall, 5-fold symmetry, radial press only, rf 1.2, up to 300 iterations |
+| r10_N5_press_from_r02 | r09's settings, started from r02's converged design (`seeds/r02_it117.npz`): r09 from scratch settled into a heavier two-web layout, while r02's single web already satisfies press-only |
 
 r08 (the same with rf 1.5) was stopped after 190 iterations: the larger filter doubled the optimised material
 (m_eq 1.31 g vs 1.06 g for r02) and peak stress kept spiking 28–45 MPa, so it would not have converged.
