@@ -182,6 +182,27 @@ a continuous web costs less inertia than spokes at this wall thickness.
 The resin run (r07, Accura AMX, 0.3 mm) was at iteration 134 at its last checkpoint and is not yet final.
 There, the optimiser formed a hollow box of two ~0.45 mm side walls (m_eq ≈ 1.06 g at the checkpoint).
 
+## Resin result: r11 (SLA resin from the team TDS, 0.3 mm rim, radial press only, N 5) — passes, lightest so far
+
+Files: `results_verified/r11_N5_resin_rim0.3_from_r10/`. Material: 1.15 g/cc, E 2100 MPa, UTS 52 MPa (ASTM D638),
+nu 0.38 assumed; allowable 26 MPa (SF 2). Warm start from r10, converged at iteration 201. Full check: P2 tets
+(407k dof), press rolled every 1°, spin, buckling, modes; wheel body only.
+
+| I (g·mm²) | m_eq | mass | stress / allowable | buckling | f1 | min-wall rule added | wall p1 / median |
+|---|---|---|---|---|---|---|---|
+| **196** (r10: 214, −8 %) | 0.985 g | 1.26 g | **0.81** (press@69) | 3.3 | **574 Hz (1.7 × rotation)** | 0 g | 0.30 / 0.42 mm |
+
+Shape: 0.3 mm rim skin with thickened bands at both rim edges, five organic branching spokes, bearing hub.
+
+- **Watch f1:** the first two modes (574/577 Hz, a pair, i.e. rim ovalisation) are only 1.7 × the 333 Hz rotation
+  frequency, below the 3 × guideline. r10 has 1085 Hz. Running stiffness is 1.7–3.7 µm/N (r10 0.6–0.8).
+- The thin rim needs much more support than the 0.6 mm PA12 rim (optimised material ≈ 0.47 g of m_eq vs 0.26 g),
+  and the resin is 24 % denser, so halving the rim saves only 8 % of I.
+- **r12** (the same from scratch) was stopped at iteration ~177 at m_eq 1.25 g: like r09, the from-scratch run
+  settles into a heavier layout than the warm start.
+- The first check of r11 failed in the volume mesher: the extraction's snap tolerance (0.08 mm) was close to the
+  0.1 mm voxel and folded 166 rim triangles. Fixed (tol ≤ voxel / 2) and re-checked with `--re-extract`.
+
 ## Current result: r10 (radial press only, N 5, PA12, 0.6 mm) — passes
 
 Files: `results_verified/r10_N5_press_from_r02/` (summary, log, render). Full check: P2 tets, press rolled every 1°
