@@ -239,3 +239,17 @@ Traceback (most recent call last):
                     ^^^^^^^^^^^^^^^^^
 ValueError: 4 is not in list
 
+[13:22:19] === r11_N5_resin_rim0.3_from_r10: SLA resin from the team's TDS: rho 1.15 g/cc, E 2100 MPa (ASTM D638; ISO 2500), UTS 52 MPa (ASTM; ISO 56) -> allowable 26 MPa (SF 2), nu 0.38 assumed (not in the TDS); 0.3 mm rim skin and min wall; radial press only, N5; rf 1.2 (r07 used 0.8 = 1.6 x grid and never converged); warm start from r10's converged wheel (seeds/r10_final.npz) | Linux-7.0.0-1018-aws-x86_64-with-glibc2.43, 4 cpus
+[13:22:27] min-wall rule added 0.000 g (OK)
+[13:23:10] extract: {'triangles': 1035944, 'shells': 1, 'cavities': 0, 'loose_bodies': 0, 'watertight': True, 'volume_mm3': 1101.2883482530567, 'mass_g': 1.266481600491015, 'min_wall_added_g': 0.0, 'wall_p1_mm': 0.3010749488124711, 'wall_median_mm': 0.41660490106496195, 'holes': None}
+[13:23:10] verification: load every 1.00 deg across the sector (72 positions)
+[13:24:07] material: SLA resin (TDS: 1.15 g/cc, E 2100 MPa, UTS 52 MPa ASTM D638): E 2100 MPa, nu 0.38, rho 1150 kg/m3, UTS 52.0 MPa -> allowable 26.0 MPa
+[13:24:08] mesh: 22194 nodes, 70695 tets, 407103 dof [57s]; mass 1.256 g, m_eq 0.985 g (wheel only, no bearings)
+[13:25:55] stress: q_max 0.810 (press@69); next: press@70 0.81, press@68 0.80, press@71 0.80, press@67 0.78, press@66 0.74
+[13:25:55] running stiffness 1.70..3.66 um/N over the sector (spoke-passing ripple 76 %)
+[13:27:06] buckling press@69: lambda_1 = 3.31
+[13:28:16] buckling press@70: lambda_1 = 3.30
+[13:29:28] buckling press@68: lambda_1 = 3.33
+[13:29:59] natural frequencies (Hz): 574, 577, 946, 1292, 1296, 1513 (rotation 333 Hz)
+[13:29:59] done [409s]
+[13:30:16] === r11_N5_resin_rim0.3_from_r10 done
