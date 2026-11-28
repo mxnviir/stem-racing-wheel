@@ -202,6 +202,25 @@ Shape: 0.3 mm rim skin with thickened bands at both rim edges, five organic bran
   peaks. Bands removed: m_eq 0.807 g but stress 1.73 × allowable at the free edge (deflection 588 vs 187 µm).
   Trimmed to 0.5 mm deep: 0.901 g, 1.10 × (fail). Trimmed to 0.7 mm: 0.950 g, 0.90 × (pass). So they are
   ~1/3 deeper than needed (the 1.2 mm filter radius sets their minimum size), worth ~0.035 g (~3.5 % of I).
+- **Hand-trimmed bands, full check (press every 1°)** — `analysis/trim_rim_bands.py`:
+
+  | band depth | chamfer | I (g·mm²) | stress / allowable | buckling | f1 |
+  |---|---|---|---|---|---|
+  | ~1.06 mm (as optimised) | — | 196 | 0.81 | 3.3 | 574 Hz |
+  | ~1.06 mm | 0.1 mm | 196 | 0.81 | 3.4 | 574 Hz |
+  | 0.9 mm | — | 192.6 | 0.79 | — | — |
+  | **0.75 mm** | **0.1 mm** | **188.6** | **0.91** | 3.25 | 590 Hz |
+  | 0.75 mm | — | 188.9 | 0.90 | — | — |
+  | 0.6 mm | — | 184.1 | 0.96 | — | — |
+  | 0.6 mm | 0.1 mm | 184.0 | 0.99 | 2.85 | 601 Hz |
+  | 0.5 mm (press every ~4°) | — | ≈179 | 1.10 ✗ | — | — |
+
+  So the optimiser leaves ~4 % of I unused under its own 0.9 stress target (~6 % up to 1.0). The cause is the
+  minimum length scale, not a bug: the 1.2 mm filter cannot draw a band thinner than ~1 mm, and the robust
+  formulation sizes the built (blueprint) part from a thinner eroded one. Recommended candidate:
+  `results_verified/r11_trimmed_bands0.75_chamfer0.1/` (I 188.6 g·mm², stress 0.91). The 0.1 mm chamfer is the
+  largest T7.4 allows on a 17.2 mm wheel (contact width excludes chamfers); with the press on the flat tread only it
+  changes nothing on the as-optimised wheel and costs ~0.03 in stress ratio on the trimmed one.
 - The thin rim needs much more support than the 0.6 mm PA12 rim (optimised material ≈ 0.47 g of m_eq vs 0.26 g),
   and the resin is 24 % denser, so halving the rim saves only 8 % of I.
 - **r12** (the same from scratch) was stopped at iteration ~177 at m_eq 1.25 g: like r09, the from-scratch run
