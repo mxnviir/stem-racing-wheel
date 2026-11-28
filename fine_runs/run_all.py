@@ -10,6 +10,7 @@ the script can be stopped and restarted at any time.
     python run_all.py r01 r03         # only runs whose name starts with these
     python run_all.py --smoke         # 2-minute install check on a very coarse grid
     python run_all.py --no-verify     # optimise + extract only
+    python run_all.py r11 --re-extract   # redo extract + verify of a finished optimisation
 """
 import sys, os, json, time, traceback, platform
 import numpy as np
@@ -38,11 +39,12 @@ def do_extract(npz, stl, t_min, voxel, log):
     phi, n_small, v_small = extract.fill_small_voids(phi, axes, s)
     if n_small:
         log(f"filled {n_small} tiny enclosed voids ({v_small:.2f} mm^3 in total)")
-    m = extract.snap(extract.surface(phi, axes), s)
+    tol = min(0.08, 0.5 * voxel)                         # snap tolerance below half a voxel (no folds)
+    m = extract.snap(extract.surface(phi, axes), s, tol=tol)
     holes = None
     if m.metadata.get("n_cavities", 0) > 0:             # enclosed cavity: SLS powder cannot get out
         phi, holes = extract.cavity_holes(phi, axes, s)
-        m = extract.snap(extract.surface(phi, axes), s)
+        m = extract.snap(extract.surface(phi, axes), s, tol=tol)
         log(f"closed cavity found -> powder holes (2 x dia 3.0 from the inner face) {holes}; cavities now "
             f"{m.metadata.get('n_cavities', 0)} ({'open' if m.metadata.get('n_cavities', 0) == 0 else 'STILL CLOSED - check by hand'})")
     m.export(stl)
@@ -81,7 +83,7 @@ def render(stl, png, title):
     f.suptitle(title, fontsize=10); f.tight_layout(); f.savefig(png, dpi=120); plt.close(f)
 
 
-def run_one(spec, smoke=False, verify=True):
+def run_one(spec, smoke=False, verify=True, re_extract=False):
     name = spec["name"] + ("_smoke" if smoke else "")
     d = os.path.join(RESULTS, name); os.makedirs(d, exist_ok=True)
     log = log_to(os.path.join(d, "log.txt"))
@@ -98,6 +100,12 @@ def run_one(spec, smoke=False, verify=True):
         print(f"settings of {name} changed since the saved checkpoint -> old results moved to {old_dir}, starting fresh")
         summary = dict(name=name, spec=spec)
     summary["spec"] = spec
+    if re_extract and "optimise" in summary:             # redo extract + verify + render from the saved design
+        for k in ("extract", "verify"):
+            summary.pop(k, None)
+        for fn in ("wheel.stl", "wheel.png"):
+            if os.path.exists(os.path.join(d, fn)):
+                os.remove(os.path.join(d, fn))
     log(f"=== {name}: {spec.get('note', '')} | {platform.platform()}, {os.cpu_count()} cpus")
     # 1. optimise (resumes automatically from density.npz)
     if spec.get("seed") and not os.path.exists(npz) and "optimise" not in summary:
@@ -175,6 +183,7 @@ def write_table():
 if __name__ == "__main__":
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     smoke, verify = "--smoke" in sys.argv, "--no-verify" not in sys.argv
+    re_extract = "--re-extract" in sys.argv
     if "--reference" in sys.argv:          # install check of the verification stage on a shipped STL
         import shutil
         ref = os.path.join(HERE, "reference")
@@ -202,7 +211,7 @@ if __name__ == "__main__":
         if args and not any(spec["name"].startswith(a) for a in args):
             continue
         try:
-            run_one(spec, smoke=smoke, verify=verify)
+            run_one(spec, smoke=smoke, verify=verify, re_extract=re_extract)
         except Exception:
             traceback.print_exc()
             failed.append(spec["name"])

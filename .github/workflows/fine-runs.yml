@@ -15,6 +15,10 @@ on:
         description: "Skip the verification stage"
         type: boolean
         default: false
+      re_extract:
+        description: "Redo extraction + verification of finished optimisations (after an extract/verify fix)"
+        type: boolean
+        default: false
       attempt:
         description: "Continuation number (set automatically when a job re-dispatches itself after the time limit)"
         required: false
@@ -125,6 +129,7 @@ jobs:
           FLAGS=""
           [ "${{ inputs.smoke }}" = "true" ] && FLAGS="--smoke"
           [ "${{ inputs.no_verify }}" = "true" ] && FLAGS="$FLAGS --no-verify"
+          [ "${{ inputs.re_extract }}" = "true" ] && FLAGS="$FLAGS --re-extract"
           set +e
           timeout 320m python run_all.py "${{ matrix.run }}" $FLAGS 2>&1 | tee /tmp/run.log
           EXIT=${PIPESTATUS[0]}

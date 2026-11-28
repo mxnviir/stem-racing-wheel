@@ -150,7 +150,9 @@ def surface(phi, axes, smooth=10):
 
 
 def snap(m, s, tol=0.08):
-    """Put vertices back exactly on the analytic end planes, rim OD and bore after smoothing."""
+    """Put vertices back exactly on the analytic end planes, rim OD and bore after smoothing.
+    Keep tol below ~half the voxel: with neighbouring vertices closer than tol, only some of them snap and
+    triangles fold (voxel 0.1 with tol 0.08 left 166 folds on the rim of r11 and the volume mesher failed)."""
     v = m.vertices.copy()
     r = np.hypot(v[:, 0], v[:, 1])
     v[np.abs(v[:, 2]) < tol, 2] = 0.0
@@ -197,7 +199,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 4 and sys.argv[4] not in ("", "0", "none"):   # holes n,d,r_h (cut after thickening)
         n_h, d_h, r_h = sys.argv[4].split(",")
         phi = add_holes(phi, axes, s, int(n_h), float(d_h), float(r_h))
-    m = snap(surface(phi, axes), s)
+    m = snap(surface(phi, axes), s, tol=min(0.08, 0.5 * voxel))
     m.export(out)
     t, pts = ray_thickness(m)
     rr = np.hypot(pts[:, 0], pts[:, 1])
