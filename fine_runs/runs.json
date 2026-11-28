@@ -95,6 +95,64 @@
    "voxel": 0.1,
    "verify_h": 0.6,
    "verify_step_deg": 1.0
+  },
+  {
+   "name": "r13_N5_resin_rim0.3_fixed_from_r10",
+   "note": "SLA resin from the team's TDS: rho 1.15 g/cc, E 2100 MPa (ASTM D638; ISO 2500), UTS 52 MPa (ASTM; ISO 56) -> allowable 26 MPa (SF 2), nu 0.38 assumed (not in the TDS); 0.3 mm rim skin and min wall; radial press only, N5; rf 1.2 (r07 used 0.8 = 1.6 x grid and never converged); warm start from r10's converged wheel (seeds/r10_final.npz) | optimiser fixes: eta_e 0.5 (stress on the built design, no erosion margin) and rf_rim_r 0.45 (radial filter in the rim band = 3 x h_rim, so rim bands are sized in 0.15 mm steps instead of >= ~1 mm)",
+   "setup": {
+    "N": 5,
+    "t_rim": 0.3,
+    "rim_zone": 2.5,
+    "h": 0.5,
+    "h_rim": 0.15,
+    "rf": 1.2,
+    "iters": 300,
+    "lcs": [
+     "press"
+    ],
+    "n_phi": 14,
+    "E": 2100.0,
+    "nu": 0.38,
+    "rho": 1150.0,
+    "strength": 52.0,
+    "material": "SLA resin (TDS: 1.15 g/cc, E 2100 MPa, UTS 52 MPa ASTM D638)",
+    "eta_e": 0.5,
+    "rf_rim_r": 0.45
+   },
+   "t_min": 0.3,
+   "voxel": 0.1,
+   "verify_h": 0.6,
+   "verify_step_deg": 1.0,
+   "init_from": "seeds/r10_final.npz",
+   "beta0": 8.0
+  },
+  {
+   "name": "r14_N5_resin_rim0.3_fixed",
+   "note": "SLA resin from the team's TDS: rho 1.15 g/cc, E 2100 MPa (ASTM D638; ISO 2500), UTS 52 MPa (ASTM; ISO 56) -> allowable 26 MPa (SF 2), nu 0.38 assumed (not in the TDS); 0.3 mm rim skin and min wall; radial press only, N5; rf 1.2 (r07 used 0.8 = 1.6 x grid and never converged); from scratch | optimiser fixes: eta_e 0.5 (stress on the built design, no erosion margin) and rf_rim_r 0.45 (radial filter in the rim band = 3 x h_rim, so rim bands are sized in 0.15 mm steps instead of >= ~1 mm)",
+   "setup": {
+    "N": 5,
+    "t_rim": 0.3,
+    "rim_zone": 2.5,
+    "h": 0.5,
+    "h_rim": 0.15,
+    "rf": 1.2,
+    "iters": 300,
+    "lcs": [
+     "press"
+    ],
+    "n_phi": 14,
+    "E": 2100.0,
+    "nu": 0.38,
+    "rho": 1150.0,
+    "strength": 52.0,
+    "material": "SLA resin (TDS: 1.15 g/cc, E 2100 MPa, UTS 52 MPa ASTM D638)",
+    "eta_e": 0.5,
+    "rf_rim_r": 0.45
+   },
+   "t_min": 0.3,
+   "voxel": 0.1,
+   "verify_h": 0.6,
+   "verify_step_deg": 1.0
   }
  ]
 }

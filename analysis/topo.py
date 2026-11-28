@@ -17,10 +17,10 @@ Discretisation
 Optimisation (density method, SIMP)
   * variables x in one 2*pi/N sector, replicated round the wheel: cyclic symmetry of order N makes the
     wheel statically balanced (shape inside the sector is free, so spokes can be curved/branched/organic)
-  * density filter (radius rf, mm) + Heaviside projection with beta continuation. Robust minimum length
-    scale: stiffness is evaluated on the ERODED design (eta_e > 0.5) and the manufactured BLUEPRINT
-    (eta = 0.5) carries the mass/inertia constraint, so every blueprint member is thicker than what the
-    eroded design needs; the realised minimum thickness is measured after extraction
+  * density filter (radius rf, mm; optionally a smaller radial radius rf_rim_r in the rim band) + Heaviside
+    projection with beta continuation. eta_e = 0.5 analyses exactly the built (blueprint) design; eta_e > 0.5
+    is the robust variant (stiffness/stress on an ERODED design, inertia on the blueprint), which makes every
+    built member thicker than the analysed one. Minimum wall: filter + the min-wall rule at extraction
   * objective: p-norm (smooth max) of the compliances of all load cases, each normalised by its value for
     the initial design; every load case is applied at several angles inside the sector, so the design must
     work wherever the wheel is loaded
@@ -55,12 +55,16 @@ class Setup:
     N: int = 6                               # cyclic symmetry order
     h: float = 0.45                          # target element size, mm
     rf: float = 1.2                          # filter radius, mm (~2 x minimum wall keeps features >= t_min)
+    rf_rim_r: float = 0.0                    # radial filter radius inside the rim band (finely meshed), mm; 0 = rf.
+                                             # Lets the rim thicken in h_rim steps instead of >= ~rf-sized lumps
     F: float = 20.0                          # handling load, N
     edge: float = 3.0                        # edge band width, mm
     n_phi: int = 3                           # load angles per sector
     p_norm: float = 6.0
     simp: float = 3.0
-    eta_e: float = 0.6                       # eroded threshold (blueprint 0.5)
+    eta_e: float = 0.6                       # threshold of the analysed design (blueprint 0.5). 0.5 = analyse
+                                             # exactly what is built; > 0.5 = robust erosion (conservative: the
+                                             # built part is thicker than the one that carries the stress)
     Emin: float = 1e-6
     I_cap: float = 0.0                       # g mm^2 of design material; 0 -> from meq_cap or frac
     meq_cap: float = 0.0                     # cap on the design material's m_eq = I / R^2 (g)
@@ -244,14 +248,28 @@ class Wheel:
 
     # ---------- filter ----------
     def _filter(self):
+        """Linear (cone) density filter. Isotropic radius rf, except that elements in the rim band filter
+        radially with rf_rim_r (anisotropic, row-wise radius: H is not symmetric, back() uses H.T)."""
+        s = self.s
         tree = cKDTree(self.cent.T)
-        pairs = tree.query_pairs(self.s.rf, output_type="ndarray")
-        d = np.linalg.norm(self.cent[:, pairs[:, 0]] - self.cent[:, pairs[:, 1]], axis=0)
-        w = self.s.rf - d
-        i = np.concatenate([pairs[:, 0], pairs[:, 1], np.arange(self.ne)])
-        j = np.concatenate([pairs[:, 1], pairs[:, 0], np.arange(self.ne)])
-        v = np.concatenate([w, w, np.full(self.ne, self.s.rf)])
-        v = v * self.vol[j]
+        pairs = tree.query_pairs(s.rf, output_type="ndarray")
+        a, b = pairs[:, 0], pairs[:, 1]
+        d2 = ((self.cent[:, a] - self.cent[:, b])**2).sum(0)
+        if s.rf_rim_r > 0:
+            rim = self.rc > s.R - s.t_rim - s.rim_zone                   # receiving element in the rim band
+            dr2 = (self.rc[a] - self.rc[b])**2
+            rest2 = np.maximum(d2 - dr2, 0.0)
+            rr = np.where(rim, s.rf_rim_r, s.rf)
+            q_ab = np.sqrt(dr2 / rr[a]**2 + rest2 / s.rf**2)              # row a (receiver a)
+            q_ba = np.sqrt(dr2 / rr[b]**2 + rest2 / s.rf**2)              # row b
+        else:
+            q_ab = q_ba = np.sqrt(d2) / s.rf
+        w_ab, w_ba = np.maximum(0.0, 1 - q_ab), np.maximum(0.0, 1 - q_ba)
+        i = np.concatenate([a, b, np.arange(self.ne)])
+        j = np.concatenate([b, a, np.arange(self.ne)])
+        v = np.concatenate([w_ab, w_ba, np.ones(self.ne)])
+        keep = v > 0
+        i, j, v = i[keep], j[keep], v[keep] * self.vol[j[keep]]
         H = sp.csr_matrix((v, (i, j)), shape=(self.ne, self.ne))
         self.Hs = np.asarray(H.sum(1)).ravel()
         self.H = H

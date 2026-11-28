@@ -139,6 +139,15 @@ optimiser resumes from its last save (every 5 iterations), and finished stages a
 | r10_N5_press_from_r02 | r09's settings, started from r02's converged design (`seeds/r02_it117.npz`): r09 from scratch settled into a heavier two-web layout, while r02's single web already satisfies press-only |
 | r11_N5_resin_rim0.3_from_r10 | SLA resin (team TDS: E 2100 MPa, UTS 52 MPa, 1.15 g/cc; nu 0.38 assumed), 0.3 mm rim skin and min wall, press only, N5, rf 1.2, warm start from r10 (`init_from`, `beta0` 8) |
 | r12_N5_resin_rim0.3 | the same from scratch |
+| r13_N5_resin_rim0.3_fixed_from_r10 | r11 with the two optimiser fixes: `eta_e` 0.5 (analyse the built design, no erosion margin) and `rf_rim_r` 0.45 (radial filter radius in the rim band, 3 × h_rim) |
+| r14_N5_resin_rim0.3_fixed | r13 from scratch |
+
+**Optimiser settings that set the minimum feature size and the margin** (see the r11 band study below for why):
+- `rf` — filter radius (mm), isotropic. Minimum member ≈ rf. Keep ≥ ~2.4 × h in the bulk (rf 0.8 on h 0.5 never converged, r07).
+- `rf_rim_r` — radial filter radius inside the rim band (meshed at `h_rim`). 0 = rf. With ~3 × h_rim the
+  optimiser can size rim stiffening in h_rim steps; with rf 1.2 it could not make a band thinner than ~1 mm.
+- `eta_e` — 0.5 analyses exactly the built design. The old default 0.6 (robust erosion) checks stress on a
+  thinner design than the one built and weighed, which left ~4 % of I unused on r11.
 
 r08 (the same with rf 1.5) was stopped after 190 iterations: the larger filter doubled the optimised material
 (m_eq 1.31 g vs 1.06 g for r02) and peak stress kept spiking 28–45 MPa, so it would not have converged.

@@ -44,8 +44,8 @@ jobs:
       fail-fast: false
       matrix:
         run:
-          - r11_N5_resin_rim0.3_from_r10   # SLA resin, 0.3 mm rim, warm start from r10
-          - r12_N5_resin_rim0.3            # same, from scratch
+          - r13_N5_resin_rim0.3_fixed_from_r10   # r11 + optimiser fixes (eta_e 0.5, rf_rim_r 0.45)
+          - r14_N5_resin_rim0.3_fixed            # same, from scratch
 
     steps:
       - uses: actions/checkout@v4
