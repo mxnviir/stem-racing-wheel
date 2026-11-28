@@ -164,6 +164,25 @@ def snap(m, s, tol=0.08):
     return m
 
 
+def chamfer(m, s, c):
+    """45-degree chamfer (deburr) of size c on both outer rim corners (r = R, z = 0 and z = W): every vertex
+    inside the corner triangle is projected onto the chamfer plane (R - r) + z' = c, z' = distance to the end."""
+    if c <= 0:
+        return m
+    v = m.vertices.copy()
+    r = np.hypot(v[:, 0], v[:, 1])
+    for end in (0.0, s["W"]):
+        zz = np.abs(v[:, 2] - end)
+        dd = (s["R"] - r) + zz - c
+        k = (dd < 0) & (r > s["R"] - c - 1e-9) & (zz < c + 1e-9)
+        rn = r[k] + dd[k] / 2                             # move half the shortfall inwards, half along the axis
+        v[k, :2] *= (rn / r[k])[:, None]
+        v[k, 2] = end + np.sign(s["W"] / 2 - end) * (zz[k] - dd[k] / 2)
+        r = np.hypot(v[:, 0], v[:, 1])
+    m.vertices = v
+    return m
+
+
 def thickness(phi, voxel):
     """Local thickness map of the solid: 2 x distance to the surface, sampled on the medial axis."""
     solid = phi > 0

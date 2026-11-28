@@ -30,7 +30,7 @@ def log_to(path):
     return log
 
 
-def do_extract(npz, stl, t_min, voxel, log):
+def do_extract(npz, stl, t_min, voxel, log, chamfer=0.0):
     s, r, z, nt, rho = extract.load(npz)
     phi0, axes = extract.field(s, r, z, nt, rho, voxel)
     phi = extract.enforce_min_thickness(phi0, axes, s, voxel, t_min) if t_min > 0 else phi0
@@ -47,6 +47,9 @@ def do_extract(npz, stl, t_min, voxel, log):
         m = extract.snap(extract.surface(phi, axes), s, tol=tol)
         log(f"closed cavity found -> powder holes (2 x dia 3.0 from the inner face) {holes}; cavities now "
             f"{m.metadata.get('n_cavities', 0)} ({'open' if m.metadata.get('n_cavities', 0) == 0 else 'STILL CLOSED - check by hand'})")
+    if chamfer > 0:                                      # deburr the rim edges (after snapping)
+        m = extract.chamfer(m, s, chamfer)
+        log(f"rim edges chamfered {chamfer} mm x 45 deg; watertight {m.is_watertight}")
     m.export(stl)
     t, _ = extract.ray_thickness(m, n=20000)
     t = t[np.isfinite(t)]
@@ -125,7 +128,8 @@ def run_one(spec, smoke=False, verify=True, re_extract=False):
         json.dump(summary, open(summary_f, "w"), indent=1, default=float)
     # 2. extract the geometry
     if "extract" not in summary:
-        summary["extract"] = do_extract(npz, stl, spec.get("t_min", 0.6), spec.get("voxel", 0.15) if not smoke else 0.3, log)
+        summary["extract"] = do_extract(npz, stl, spec.get("t_min", 0.6), spec.get("voxel", 0.15) if not smoke else 0.3, log,
+                                        chamfer=spec.get("chamfer", 0.0))
         json.dump(summary, open(summary_f, "w"), indent=1, default=float)
     # 3. full-accuracy verification of the real geometry
     if summary["extract"].get("loose_bodies", 0):
@@ -135,6 +139,7 @@ def run_one(spec, smoke=False, verify=True, re_extract=False):
     if verify and "verify" not in summary:
         import verify_organic
         s = json.loads(str(np.load(npz, allow_pickle=True)["setup"]))
+        s["chamfer"] = spec.get("chamfer", 0.0)            # press on the flat tread only, between the chamfers
         h = spec.get("verify_h", 0.6) if not smoke else 1.2
         n_ang = max(2, int(round(360.0 / s["N"] / spec.get("verify_step_deg", 1.0))))   # rolling sweep
         log(f"verification: load every {360.0 / s['N'] / n_ang:.2f} deg across the sector ({n_ang} positions)")

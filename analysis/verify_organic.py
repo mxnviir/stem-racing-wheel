@@ -89,7 +89,9 @@ def loads(m, s, n_ang=6):
     d_ = lambda x, c: np.angle(np.exp(1j * (th_(x) - c)))
     cos2 = lambda d, a: np.where(np.abs(d) < a, np.cos(0.5 * np.pi * d / a)**2, 0.0)
     ramp = lambda d, w=0.5: np.cos(0.5 * np.pi * np.clip((d + w / 2) / w, 0, 1))**2
-    outer = lambda x: r_(x) > R - 0.06
+    ch = float(s.get("chamfer", 0.0))                  # edge chamfer: the press acts on the flat tread only
+    outer = ((lambda x: r_(x) > R - 0.06) if ch <= 0 else
+             (lambda x: (r_(x) > R - 0.06) & (x[2] > ch + 0.02) & (x[2] < W - ch - 0.02)))
     F, names = [], []
     sector = 2 * np.pi / N
     bf_all = m.mesh.boundary_facets()
