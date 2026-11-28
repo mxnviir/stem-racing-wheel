@@ -184,3 +184,58 @@
 [11:38:41] it 180 beta   16 m_eq 0.983 g (design 0.466) mass 1.261 g | max vM  23.3 MPa (press@46, r 13.1 z 0.2) P-norm  23.4 | grey 0.017 change 0.020 [104s]
 [11:40:26] it 181 beta   16 m_eq 0.982 g (design 0.465) mass 1.260 g | max vM  23.4 MPa (press@41, r 13.1 z 0.2) P-norm  23.4 | grey 0.017 change 0.020 [105s]
 [11:42:09] it 182 beta   16 m_eq 0.982 g (design 0.465) mass 1.260 g | max vM  23.3 MPa (press@46, r 13.1 z 0.2) P-norm  23.4 | grey 0.017 change 0.020 [104s]
+[11:43:57] === r11_N5_resin_rim0.3_from_r10: SLA resin from the team's TDS: rho 1.15 g/cc, E 2100 MPa (ASTM D638; ISO 2500), UTS 52 MPa (ASTM; ISO 56) -> allowable 26 MPa (SF 2), nu 0.38 assumed (not in the TDS); 0.3 mm rim skin and min wall; radial press only, N5; rf 1.2 (r07 used 0.8 = 1.6 x grid and never converged); warm start from r10's converged wheel (seeds/r10_final.npz) | Linux-7.0.0-1020-azure-x86_64-with-glibc2.43, 4 cpus
+[11:44:07] grid: nr 36 nt 175 nz 37 -> 220500 elements, 699300 dof, 44100 variables, 14 load cases; setup 10s; stress target 23.4 MPa (vM)
+[11:44:07] resuming from iteration 181 (beta 16.0), optimiser state restored
+[11:47:34] it 181 beta   16 m_eq 0.982 g (design 0.465) mass 1.260 g | max vM  23.4 MPa (press@41, r 13.1 z 0.2) P-norm  23.4 | grey 0.017 change 0.020 [207s]
+[11:50:58] it 182 beta   16 m_eq 0.982 g (design 0.465) mass 1.260 g | max vM  23.3 MPa (press@46, r 13.1 z 0.2) P-norm  23.4 | grey 0.017 change 0.020 [204s]
+[11:54:24] it 183 beta   16 m_eq 0.982 g (design 0.465) mass 1.260 g | max vM  23.3 MPa (press@62, r 13.1 z 16.9) P-norm  23.4 | grey 0.017 change 0.020 [206s]
+[11:57:53] it 184 beta   16 m_eq 0.981 g (design 0.464) mass 1.259 g | max vM  23.4 MPa (press@46, r 13.1 z 0.2) P-norm  23.4 | grey 0.017 change 0.020 [209s]
+[12:01:20] it 185 beta   16 m_eq 0.981 g (design 0.464) mass 1.259 g | max vM  23.5 MPa (press@46, r 13.1 z 16.9) P-norm  23.5 | grey 0.017 change 0.020 [207s]
+[12:04:48] it 186 beta   16 m_eq 0.982 g (design 0.465) mass 1.261 g | max vM  23.6 MPa (press@46, r 13.1 z 0.2) P-norm  23.5 | grey 0.017 change 0.020 [208s]
+[12:08:14] it 187 beta   16 m_eq 0.984 g (design 0.467) mass 1.263 g | max vM  23.5 MPa (press@46, r 13.1 z 16.9) P-norm  23.5 | grey 0.017 change 0.020 [206s]
+[12:11:36] it 188 beta   16 m_eq 0.985 g (design 0.468) mass 1.264 g | max vM  23.6 MPa (press@46, r 13.1 z 16.9) P-norm  23.5 | grey 0.018 change 0.020 [202s]
+[12:14:58] it 189 beta   16 m_eq 0.987 g (design 0.470) mass 1.267 g | max vM  23.6 MPa (press@46, r 13.1 z 16.9) P-norm  23.5 | grey 0.018 change 0.020 [202s]
+[12:18:22] it 190 beta   16 m_eq 0.989 g (design 0.472) mass 1.270 g | max vM  23.6 MPa (press@46, r 13.1 z 16.9) P-norm  23.5 | grey 0.018 change 0.020 [204s]
+[12:21:48] it 191 beta   16 m_eq 0.991 g (design 0.474) mass 1.273 g | max vM  23.6 MPa (press@46, r 13.1 z 16.9) P-norm  23.5 | grey 0.018 change 0.020 [205s]
+[12:25:15] it 192 beta   16 m_eq 0.993 g (design 0.476) mass 1.276 g | max vM  23.5 MPa (press@46, r 13.1 z 16.9) P-norm  23.4 | grey 0.018 change 0.020 [208s]
+[12:28:43] it 193 beta   16 m_eq 0.994 g (design 0.477) mass 1.277 g | max vM  23.4 MPa (press@46, r 13.1 z 16.9) P-norm  23.4 | grey 0.018 change 0.020 [207s]
+[12:32:11] it 194 beta   16 m_eq 0.994 g (design 0.477) mass 1.276 g | max vM  23.4 MPa (press@46, r 13.1 z 0.2) P-norm  23.4 | grey 0.018 change 0.020 [209s]
+[12:35:35] it 195 beta   16 m_eq 0.994 g (design 0.477) mass 1.275 g | max vM  23.4 MPa (press@62, r 13.1 z 0.2) P-norm  23.4 | grey 0.018 change 0.020 [203s]
+[12:38:58] it 196 beta   16 m_eq 0.993 g (design 0.476) mass 1.275 g | max vM  23.4 MPa (press@46, r 13.1 z 0.2) P-norm  23.4 | grey 0.018 change 0.020 [203s]
+[12:42:22] it 197 beta   16 m_eq 0.994 g (design 0.477) mass 1.276 g | max vM  23.4 MPa (press@46, r 13.1 z 16.9) P-norm  23.4 | grey 0.018 change 0.020 [204s]
+[12:45:45] it 198 beta   16 m_eq 0.993 g (design 0.476) mass 1.275 g | max vM  23.4 MPa (press@46, r 13.1 z 16.9) P-norm  23.4 | grey 0.018 change 0.020 [203s]
+[12:49:15] it 199 beta   16 m_eq 0.994 g (design 0.477) mass 1.276 g | max vM  23.4 MPa (press@46, r 13.1 z 0.2) P-norm  23.4 | grey 0.018 change 0.020 [210s]
+[12:52:42] it 200 beta   16 m_eq 0.993 g (design 0.476) mass 1.275 g | max vM  23.4 MPa (press@46, r 13.1 z 0.2) P-norm  23.4 | grey 0.018 change 0.020 [206s]
+[12:56:05] it 201 beta   16 m_eq 0.993 g (design 0.476) mass 1.275 g | max vM  23.4 MPa (press@46, r 13.1 z 0.2) P-norm  23.4 | grey 0.018 change 0.020 [203s]
+[12:56:05] converged
+[12:56:13] min-wall rule added 0.000 g (OK)
+[12:57:05] extract: {'triangles': 1035944, 'shells': 1, 'cavities': 0, 'loose_bodies': 0, 'watertight': True, 'volume_mm3': 1102.5343791499427, 'mass_g': 1.267914536022434, 'min_wall_added_g': 0.0, 'wall_p1_mm': 0.3010731828647849, 'wall_median_mm': 0.42409156145905097, 'holes': None}
+[12:57:05] verification: load every 1.00 deg across the sector (72 positions)
+[12:58:37] verification FAILED: ValueError('4 is not in list')
+Traceback (most recent call last):
+  File "/home/runner/work/stem-racing-wheel/stem-racing-wheel/fine_runs/../analysis/verify_organic.py", line 32, in mesh_stl
+    return _mesh_stl(stl, h, h_min, angle, reparam=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/stem-racing-wheel/stem-racing-wheel/fine_runs/../analysis/verify_organic.py", line 76, in _mesh_stl
+    T = np.array(en[list(et).index(4)], np.int64).reshape(-1, 4)
+                    ^^^^^^^^^^^^^^^^^
+ValueError: 4 is not in list
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/runner/work/stem-racing-wheel/stem-racing-wheel/fine_runs/run_all.py", line 134, in run_one
+    vres = verify_organic.run(stl, s, h=h, h_min=min(0.25, h / 2), n_ang=n_ang if not smoke else 2,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/stem-racing-wheel/stem-racing-wheel/fine_runs/../analysis/verify_organic.py", line 142, in run
+    P, T = mesh_stl(stl, h, h_min)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/stem-racing-wheel/stem-racing-wheel/fine_runs/../analysis/verify_organic.py", line 45, in mesh_stl
+    return _mesh_stl(f, h, h_min, angle, reparam=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/stem-racing-wheel/stem-racing-wheel/fine_runs/../analysis/verify_organic.py", line 76, in _mesh_stl
+    T = np.array(en[list(et).index(4)], np.int64).reshape(-1, 4)
+                    ^^^^^^^^^^^^^^^^^
+ValueError: 4 is not in list
+
