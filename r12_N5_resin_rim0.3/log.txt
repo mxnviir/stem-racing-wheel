@@ -178,3 +178,8 @@
 [11:37:55] it 175 beta   16 m_eq 1.249 g (design 0.732) mass 1.964 g | max vM  23.4 MPa (press@10, r 13.9 z 0.2) P-norm  23.4 | grey 0.072 change 0.020 [110s]
 [11:39:46] it 176 beta   16 m_eq 1.249 g (design 0.732) mass 1.963 g | max vM  23.4 MPa (press@10, r 13.9 z 0.2) P-norm  23.4 | grey 0.072 change 0.020 [111s]
 [11:41:33] it 177 beta   16 m_eq 1.248 g (design 0.731) mass 1.961 g | max vM  23.4 MPa (press@10, r 13.9 z 0.2) P-norm  23.4 | grey 0.072 change 0.020 [107s]
+[11:43:51] === r12_N5_resin_rim0.3: SLA resin from the team's TDS: rho 1.15 g/cc, E 2100 MPa (ASTM D638; ISO 2500), UTS 52 MPa (ASTM; ISO 56) -> allowable 26 MPa (SF 2), nu 0.38 assumed (not in the TDS); 0.3 mm rim skin and min wall; radial press only, N5; rf 1.2 (r07 used 0.8 = 1.6 x grid and never converged); from scratch (checks whether a 0.3 mm rim prefers another layout) | Linux-7.0.0-1020-azure-x86_64-with-glibc2.43, 4 cpus
+[11:44:03] grid: nr 36 nt 175 nz 37 -> 220500 elements, 699300 dof, 44100 variables, 14 load cases; setup 12s; stress target 23.4 MPa (vM)
+[11:44:03] resuming from iteration 176 (beta 16.0), optimiser state restored
+[11:47:47] it 176 beta   16 m_eq 1.249 g (design 0.732) mass 1.963 g | max vM  23.4 MPa (press@10, r 13.9 z 0.2) P-norm  23.4 | grey 0.072 change 0.020 [224s]
+[11:51:33] it 177 beta   16 m_eq 1.248 g (design 0.731) mass 1.961 g | max vM  23.4 MPa (press@10, r 13.9 z 0.2) P-norm  23.4 | grey 0.072 change 0.020 [227s]
