@@ -40,8 +40,8 @@ jobs:
       fail-fast: false
       matrix:
         run:
-          - r09_N5_press_skin0.6
-          - r10_N5_press_from_r02   # continues r02's converged design with press only
+          - r11_N5_resin_rim0.3_from_r10   # SLA resin, 0.3 mm rim, warm start from r10
+          - r12_N5_resin_rim0.3            # same, from scratch
 
     steps:
       - uses: actions/checkout@v4

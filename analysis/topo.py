@@ -538,10 +538,32 @@ def _mma_state(L, U, x1, x2, cn):
     return dict(mma_L=L, mma_U=U, mma_x1=x1, mma_x2=x2, cn=cn)
 
 
-def optimise_inertia(s: Setup, out="topo_inertia.npz", log=print, sigma_target=None, P=10.0, q_relax=0.5):
+def warm_start(w, npz):
+    """Design variables of Wheel w interpolated from the density field of an earlier result (other grid,
+    rim thickness or material allowed): trilinear in (r, theta, z), periodic in theta."""
+    from scipy.interpolate import RegularGridInterpolator
+    d = np.load(npz, allow_pickle=True)
+    r, z, nt = d["r"], d["z"], int(d["nt"])
+    rho = d["rho"].reshape(len(r) - 1, nt, len(z) - 1)
+    rc = 0.5 * (r[1:] + r[:-1]); zc = 0.5 * (z[1:] + z[:-1]); dth = 2 * np.pi / nt
+    tc = (np.arange(nt) + 0.5) * dth
+    A = np.concatenate([rho[:, -1:], rho, rho[:, :1]], 1)
+    tcp = np.concatenate([[tc[0] - dth], tc, [tc[-1] + dth]])
+    f = RegularGridInterpolator((rc, tcp, zc), A, bounds_error=False, fill_value=None)
+    first = w.ej < w.m                                                    # one sector holds every variable
+    pts = np.column_stack([w.rc[first], w.tc[first] % (2 * np.pi), w.zc[first]])
+    x = np.zeros(w.nvar)
+    x[w.var_of[first]] = np.clip(f(pts), 0.0, 1.0)
+    return x
+
+
+def optimise_inertia(s: Setup, out="topo_inertia.npz", log=print, sigma_target=None, P=10.0, q_relax=0.5,
+                     init_from=None, beta0=1.0):
     """Minimum rotational inertia subject to the stress limit under all load cases (and the minimum
     length scale). Constraint: adaptive-normalised P-norm of the relaxed surface von Mises stress of the
-    eroded design over all elements, corners and load cases <= sigma_target."""
+    eroded design over all elements, corners and load cases <= sigma_target.
+    init_from: density npz of an earlier result (any grid) used as the starting design of a fresh run;
+    beta0: projection sharpness to start from (use ~8 for a warm start so it is not blurred)."""
     t0 = time.time()
     w = Wheel(s)
     allow = s.strength / 2.0
@@ -556,8 +578,11 @@ def optimise_inertia(s: Setup, out="topo_inertia.npz", log=print, sigma_target=N
     x = np.full(w.nvar, 0.5)
     xmin, xmax = np.zeros(w.nvar), np.ones(w.nvar)
     L = U_ = x1 = x2 = None
-    beta, cn, hist, it0 = 1.0, 1.0, [], 0
+    beta, cn, hist, it0 = float(beta0), 1.0, [], 0
     import os
+    if init_from and not os.path.exists(out):                            # warm start from another grid
+        x = warm_start(w, init_from)
+        log(f"warm start from {init_from}: design variables mapped, mean {x.mean():.3f}; beta starts at {beta:g}")
     if os.path.exists(out):                                              # resume an interrupted run
         d = np.load(out, allow_pickle=True)
         if len(d["x"]) == w.nvar:
@@ -572,7 +597,7 @@ def optimise_inertia(s: Setup, out="topo_inertia.npz", log=print, sigma_target=N
                 cn = None
                 log(f"resuming from iteration {it0} (beta {beta}), old checkpoint: tight MMA restart")
     for it in range(it0, s.iters):
-        if it > 0 and it % 25 == 0 and beta < 16:
+        if it > 0 and it % 25 == 0 and beta < 16:   # continuation (a warm start begins at beta0)
             beta *= 2
         pe, dpe, pb, dpb = w.densities(x, beta)
         Ee = s.Emin + pe**s.simp * (1 - s.Emin)

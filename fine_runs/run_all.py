@@ -106,7 +106,9 @@ def run_one(spec, smoke=False, verify=True):
         log(f"seeded from {spec['seed']}")
     if "optimise" not in summary:
         t0 = time.time()
-        w, x, pb, hist = topo.optimise_inertia(topo.Setup(**st), npz, log=log, sigma_target=spec.get("sigma_target"))
+        init = os.path.join(HERE, spec["init_from"]) if spec.get("init_from") and not smoke else None
+        w, x, pb, hist = topo.optimise_inertia(topo.Setup(**st), npz, log=log, sigma_target=spec.get("sigma_target"),
+                                               init_from=init, beta0=spec.get("beta0", 1.0) if init else 1.0)
         converged = len(hist) < st["iters"]                 # topo stops early only when converged
         summary["optimise"] = dict(iterations=len(hist), converged=converged, final=hist[-1],
                                    minutes=(time.time() - t0) / 60)
