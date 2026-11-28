@@ -196,6 +196,12 @@ Shape: 0.3 mm rim skin with thickened bands at both rim edges, five organic bran
 
 - **Watch f1:** the first two modes (574/577 Hz, a pair, i.e. rim ovalisation) are only 1.7 × the 333 Hz rotation
   frequency, below the 3 × guideline. r10 has 1085 Hz. Running stiffness is 1.7–3.7 µm/N (r10 0.6–0.8).
+- **The rim edge bands are load-bearing** (checked by editing the density field, re-extracting and re-verifying,
+  press every ~4°): each is ~1.06 mm deep × 1.5 mm wide all round and costs 0.17 g of m_eq. The spokes meet the rim
+  only at mid-width, so the 0.3 mm skin overhangs ~8 mm to each free edge, and the free edge is where the press
+  peaks. Bands removed: m_eq 0.807 g but stress 1.73 × allowable at the free edge (deflection 588 vs 187 µm).
+  Trimmed to 0.5 mm deep: 0.901 g, 1.10 × (fail). Trimmed to 0.7 mm: 0.950 g, 0.90 × (pass). So they are
+  ~1/3 deeper than needed (the 1.2 mm filter radius sets their minimum size), worth ~0.035 g (~3.5 % of I).
 - The thin rim needs much more support than the 0.6 mm PA12 rim (optimised material ≈ 0.47 g of m_eq vs 0.26 g),
   and the resin is 24 % denser, so halving the rim saves only 8 % of I.
 - **r12** (the same from scratch) was stopped at iteration ~177 at m_eq 1.25 g: like r09, the from-scratch run
